@@ -13,9 +13,13 @@ class SpecialtyAdmin(admin.ModelAdmin):
 @admin.register(DoctorProfile)
 class DoctorProfileAdmin(admin.ModelAdmin):
     list_display = ("__str__", "specialty", "years_experience",
-                    "consultation_fee", "slot_minutes", "is_active")
+                    "phi_kham", "slot_minutes", "is_active")
     list_filter = ("specialty", "is_active")
     search_fields = ("user__first_name", "user__last_name", "user__username")
+
+    @admin.display(description="Phí khám", ordering="consultation_fee")
+    def phi_kham(self, obj):
+        return obj.fee_display
 
 
 @admin.register(WorkSchedule)

@@ -28,8 +28,10 @@ class DoctorProfile(models.Model):
                              help_text="Ví dụ: TS.BS, ThS.BS")
     years_experience = models.PositiveSmallIntegerField("số năm kinh nghiệm", default=0)
     bio = models.TextField("mô tả dịch vụ", blank=True)
-    consultation_fee = models.DecimalField("phí khám tham khảo (VND)",
-                                           max_digits=10, decimal_places=0, default=0)
+    consultation_fee = models.DecimalField(
+        "phí khám tham khảo (VNĐ)", max_digits=10, decimal_places=0, default=0,
+        help_text="Nhập số, không gõ dấu chấm. Ví dụ: 200000",
+    )
     slot_minutes = models.PositiveSmallIntegerField(
         "số phút mỗi khung giờ", default=30,
         choices=[(15, "15 phút"), (30, "30 phút")],
@@ -43,6 +45,10 @@ class DoctorProfile(models.Model):
     def __str__(self):
         return f"{self.title} {self.user.get_full_name() or self.user.username}".strip()
 
+    @property
+    def fee_display(self):
+        """200000 -> '200.000 VNĐ' (dùng cho cả template và admin)."""
+        return f"{int(self.consultation_fee):,}".replace(",", ".") + " VNĐ"
 
 class WorkSchedule(models.Model):
     class Shift(models.TextChoices):
