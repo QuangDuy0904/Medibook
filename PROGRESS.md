@@ -18,6 +18,11 @@ Công nghệ: Django, PostgreSQL, Bootstrap. Repo: https://github.com/QuangDuy09
 - Đưa code lên GitHub, `.env` được chặn bởi `.gitignore` nên không bị lộ.
 - **1.4**: trang quản lý hồ sơ khám cho bệnh nhân: xem danh sách, thêm, sửa, xóa hồ sơ người thân; hồ sơ "Bản thân" không xóa được và không đổi được quan hệ; mỗi người chỉ truy cập được hồ sơ của mình (người khác gõ URL sẽ ra 404).
 - Chuyển cấu hình `settings.py` từ SQLite sang PostgreSQL, đọc thông tin từ `.env`, migrate lại vào PostgreSQL.
+  **2.1**: model `Specialty` (chuyên khoa), `DoctorProfile` (học hàm, kinh nghiệm, phí khám, số phút mỗi khung).
+- **2.2**: model `WorkSchedule` (ngày, ca sáng/chiều), `DayOff` (nghỉ phép, báo bận).
+- **2.3**: `TimeSlot` và hàm `generate_slots()` tự chia ca làm việc thành khung 15 hoặc 30 phút; khung giờ bị ẩn khi bác sĩ báo nghỉ (FR-08).
+- **2.4, 2.5**: trang tìm bác sĩ (lọc theo tên, chuyên khoa, ngày, ca) và trang chi tiết bác sĩ hiển thị lịch trống 14 ngày tới.
+- Phí khám hiển thị dạng `200.000 VNĐ`; form tạo user trong admin có thêm họ tên.
 
 ### Lỗi gặp và cách sửa
 
@@ -30,6 +35,7 @@ Công nghệ: Django, PostgreSQL, Bootstrap. Repo: https://github.com/QuangDuy09
 | `remote origin already exists`                          | Lỡ chạy nguyên dòng mẫu `ten-ban/medibook.git`                     | `git remote set-url origin <địa chỉ đúng>`                          |
 
 | `migrate` tạo bảng trong `db.sqlite3` thay vì PostgreSQL | `settings.py` vẫn dùng `DATABASES` mặc định (SQLite) | Thay khối `DATABASES` bằng cấu hình PostgreSQL đọc từ `.env`, chạy lại `migrate` | |
+Form "Add user" trong admin không có ô họ tên | `add_fieldsets` chưa khai báo `first_name`, `last_name` | Thêm hai trường vào `add_fieldsets` trong `accounts/admin.py` |
 
 ### Bài học
 
@@ -53,7 +59,7 @@ Công nghệ: Django, PostgreSQL, Bootstrap. Repo: https://github.com/QuangDuy09
 | 1.2 | `PatientProfile`                                          | ✅                             |
 | 1.3 | Đăng ký / đăng nhập SĐT hoặc email                        | 🔄 Đã viết code, đang chạy thử |
 | 1.4 | Trang hồ sơ và người thân                                 | ✅                             |
-| 2   | Clinics: chuyên khoa, bác sĩ, lịch làm việc, tìm kiếm     | ⬜                             |
+| 2   | Clinics: chuyên khoa, bác sĩ, lịch làm việc, tìm kiếm     | ✅                             |
 | 3   | Appointments: đặt lịch, chống trùng slot, hủy, trạng thái | ⬜                             |
 | 4   | Lễ tân: check-in, đặt lịch trực tiếp                      | ⬜                             |
 | 5   | Bác sĩ: danh sách bệnh nhân, ghi chú sau khám             | ⬜                             |
