@@ -1,0 +1,53 @@
+{% extends "base.html" %}
+{% block title %}Tìm bác sĩ{% endblock %}
+{% block content %}
+<h3>Tìm bác sĩ</h3>
+<form method="get" class="card card-body mb-3">
+  <div class="row g-2">
+    <div class="col-12 col-md-6">
+      <input name="q" value="{{ q }}" class="form-control" placeholder="Tên bác sĩ">
+    </div>
+    <div class="col-12 col-md-6">
+      <select name="specialty" class="form-select">
+        <option value="">Tất cả chuyên khoa</option>
+        {% for s in specialties %}
+        <option value="{{ s.pk }}" {% if s.pk|stringformat:"s" == specialty %}selected{% endif %}>{{ s.name }}</option>
+        {% endfor %}
+      </select>
+    </div>
+    <div class="col-6 col-md-4">
+      <input type="date" name="date" value="{{ date }}" class="form-control">
+    </div>
+    <div class="col-6 col-md-4">
+      <select name="shift" class="form-select">
+        <option value="">Cả ngày</option>
+        {% for val, label in shift_choices %}
+        <option value="{{ val }}" {% if val == shift %}selected{% endif %}>{{ label }}</option>
+        {% endfor %}
+      </select>
+    </div>
+    <div class="col-12 col-md-4 d-flex gap-2">
+      <button class="btn btn-primary flex-fill">Tìm</button>
+      <a class="btn btn-outline-secondary" href="{% url 'clinics:doctor_list' %}">Xóa lọc</a>
+    </div>
+  </div>
+</form>
+
+{% for d in doctors %}
+<div class="card card-body mb-2">
+  <div class="d-flex justify-content-between align-items-start gap-2">
+    <div>
+      <strong>{{ d }}</strong>
+      <span class="badge text-bg-info">{{ d.specialty }}</span>
+      <div class="small text-muted">
+        {{ d.years_experience }} năm kinh nghiệm · Phí khám: {{ d.fee_display }}
+      </div>
+    </div>
+    <a class="btn btn-primary btn-sm text-nowrap"
+       href="{% url 'clinics:doctor_detail' d.pk %}{% if date %}?date={{ date }}{% endif %}">Xem lịch trống</a>
+  </div>
+</div>
+{% empty %}
+<div class="alert alert-warning">Không tìm thấy bác sĩ phù hợp.</div>
+{% endfor %}
+{% endblock %}

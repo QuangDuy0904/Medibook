@@ -1,0 +1,37 @@
+{% extends "base.html" %}
+{% block title %}{{ doctor }}{% endblock %}
+{% block content %}
+<a href="{% url 'clinics:doctor_list' %}" class="small">← Danh sách bác sĩ</a>
+<div class="card card-body my-3">
+  <h4 class="mb-1">{{ doctor }}</h4>
+  <div><span class="badge text-bg-info">{{ doctor.specialty }}</span></div>
+  <div class="text-muted mt-2">
+    {{ doctor.years_experience }} năm kinh nghiệm · Phí khám tham khảo: <strong>{{ doctor.fee_display }}</strong>
+  </div>
+  {% if doctor.bio %}<p class="mt-2 mb-0">{{ doctor.bio|linebreaksbr }}</p>{% endif %}
+</div>
+
+<h5>Chọn ngày khám</h5>
+<div class="d-flex gap-2 overflow-auto pb-2 mb-3">
+  {% for d in days %}
+  <a href="?date={{ d.date|date:'Y-m-d' }}"
+     class="btn btn-sm text-nowrap {% if d.date == selected %}btn-primary{% elif d.n %}btn-outline-primary{% else %}btn-outline-secondary disabled{% endif %}">
+    {{ d.date|date:"D d/m" }}<br><small>{% if d.n %}{{ d.n }} giờ trống{% else %}hết chỗ{% endif %}</small>
+  </a>
+  {% endfor %}
+</div>
+
+<h5>Khung giờ ngày {{ selected|date:"d/m/Y" }}</h5>
+{% if slots %}
+<div class="d-flex flex-wrap gap-2">
+  {% for s in slots %}
+  <button class="btn btn-outline-success" disabled title="Chức năng đặt lịch làm ở Giai đoạn 3">
+    {{ s.start_at|time:"H:i" }}
+  </button>
+  {% endfor %}
+</div>
+<p class="small text-muted mt-2">Nút đặt lịch sẽ hoạt động ở Giai đoạn 3.</p>
+{% else %}
+<div class="alert alert-warning">Ngày này không còn khung giờ trống.</div>
+{% endif %}
+{% endblock %}

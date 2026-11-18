@@ -2,6 +2,7 @@ from datetime import datetime, timedelta
 
 from django.utils import timezone
 
+from django.db.models import Exists, OuterRef, Q
 from .models import DayOff, TimeSlot
 
 
@@ -21,13 +22,13 @@ def generate_slots(schedule):
     return len(slots)
 
 
+def available_slots_qs():
+    off = DayOff.objects.filter(
+        doctor=OuterRef("doctor"), date=OuterRef("schedule__date")
+    ).filter(Q(shift="") | Q(shift=OuterRef("schedule__shift")))
+    return (TimeSlot.objects.filter(start_at__gt=timezone.now())
+            .annotate(is_off=Exists(off)).filter(is_off=False))
+
+
 def open_slots(doctor, day):
-    """Khung giờ của bác sĩ trong một ngày, đã bỏ giờ quá khứ và ca nghỉ (FR-08).
-    Giai đoạn 3 sẽ loại thêm các slot đã có lịch hẹn."""
-    qs = TimeSlot.objects.filter(doctor=doctor, start_at__date=day,
-                                 start_at__gt=timezone.now())
-    for off in DayOff.objects.filter(doctor=doctor, date=day):
-        if not off.shift:
-            return qs.none()
-        qs = qs.exclude(schedule__shift=off.shift)
-    return qs
+    return available_slots_qs().filter(doctor=doctor, schedule__date=day)
