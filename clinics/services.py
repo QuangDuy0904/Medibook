@@ -23,12 +23,14 @@ def generate_slots(schedule):
 
 
 def available_slots_qs():
+    from appointments.models import Appointment  # import muộn để tránh vòng lặp
+
     off = DayOff.objects.filter(
         doctor=OuterRef("doctor"), date=OuterRef("schedule__date")
     ).filter(Q(shift="") | Q(shift=OuterRef("schedule__shift")))
     return (TimeSlot.objects.filter(start_at__gt=timezone.now())
+            .exclude(appointments__status__in=Appointment.ACTIVE_STATUSES)
             .annotate(is_off=Exists(off)).filter(is_off=False))
-
 
 def open_slots(doctor, day):
     return available_slots_qs().filter(doctor=doctor, schedule__date=day)

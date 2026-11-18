@@ -24,7 +24,7 @@ class User(AbstractUser):
         max_length=20, choices=Role.choices, default=Role.PATIENT
     )
     # null=True để nhiều tài khoản có thể không có email/SĐT mà vẫn unique
-    email = models.EmailField("email", unique=True, null=True, blank=True)
+    email = models.EmailField(unique=True, blank=True, null=True)
     phone = models.CharField(
         "số điện thoại", max_length=15, unique=True,
         null=True, blank=True, validators=[phone_validator],
@@ -45,6 +45,10 @@ class User(AbstractUser):
     def __str__(self):
         return self.get_full_name() or self.phone or self.email or self.username
 
+    def save(self, *args, **kwargs):
+        self.email = self.email.strip() if self.email else None
+        self.phone = self.phone.strip() if self.phone else None
+        super().save(*args, **kwargs)
 
 class PatientProfile(models.Model):
     """Hồ sơ khám: 1 hồ sơ SELF của chính chủ + nhiều hồ sơ người thân (FR-02, FR-03)."""

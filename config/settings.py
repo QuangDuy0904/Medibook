@@ -150,3 +150,12 @@ LOGOUT_REDIRECT_URL = "accounts:login"
 
 AUTH_USER_MODEL = "accounts.User"
 
+BOOKING_RULES = {
+    "MAX_ACTIVE_APPOINTMENTS": 2,   # BR-02: Tối đa 2 lịch Confirmed chưa diễn ra
+    "CANCEL_MIN_HOURS": 2,          # BR-03: Hủy trước giờ khám tối thiểu 2 tiếng
+    "NO_SHOW_GRACE_MINUTES": 15,    # BR-04: Quá 15 phút chưa check-in -> No-show
+    "NO_SHOW_WINDOW_DAYS": 30,      # BR-05: Cửa sổ 30 ngày xét vi phạm
+    "NO_SHOW_MAX_COUNT": 2,         # BR-05: Từ 2 lần No-show trở lên thì khóa
+    "BOOKING_LOCK_DAYS": 30,        # BR-05: Khóa đặt lịch trong 30 ngày
+}
+
