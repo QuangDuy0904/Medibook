@@ -1,24 +1,70 @@
 from django.contrib import messages
 from django.contrib.auth import login
 from django.contrib.auth.decorators import login_required
-from django.shortcuts import redirect, render
+from django.shortcuts import get_object_or_404, redirect, render
 
-from .forms import RegisterForm
+from .forms import PatientProfileForm, RegisterForm
+from .models import PatientProfile
 
 
 def register(request):
     if request.user.is_authenticated:
-        return redirect("accounts:home")
+        return redirect("accounts:profiles")
     form = RegisterForm(request.POST or None)
     if request.method == "POST" and form.is_valid():
         user = form.save()
         login(request, user, backend="accounts.backends.IdentifierBackend")
         messages.success(request, "Đăng ký thành công!")
-        return redirect("accounts:home")
+        return redirect("accounts:profiles")
     return render(request, "accounts/register.html", {"form": form})
 
 
 @login_required
 def home(request):
-    # Trang tạm, sẽ thay bằng trang hồ sơ ở bước 1.4
-    return render(request, "accounts/home.html")
+    return redirect("accounts:profiles")
+
+
+@login_required
+def profiles(request):
+    return render(request, "accounts/profiles.html",
+                  {"profiles": request.user.profiles.all()})
+
+
+@login_required
+def profile_add(request):
+    form = PatientProfileForm(request.POST or None)
+    if request.method == "POST" and form.is_valid():
+        obj = form.save(commit=False)
+        obj.owner = request.user
+        obj.save()
+        messages.success(request, "Đã thêm hồ sơ.")
+        return redirect("accounts:profiles")
+    return render(request, "accounts/profile_form.html",
+                  {"form": form, "title": "Thêm hồ sơ người thân"})
+
+
+@login_required
+def profile_edit(request, pk):
+    # Chỉ lấy hồ sơ của chính mình, người khác gõ URL sẽ ra 404
+    obj = get_object_or_404(PatientProfile, pk=pk, owner=request.user)
+    is_self = obj.relationship == PatientProfile.Relationship.SELF
+    form = PatientProfileForm(request.POST or None, instance=obj, is_self=is_self)
+    if request.method == "POST" and form.is_valid():
+        form.save()
+        messages.success(request, "Đã cập nhật hồ sơ.")
+        return redirect("accounts:profiles")
+    return render(request, "accounts/profile_form.html",
+                  {"form": form, "title": f"Sửa hồ sơ: {obj.full_name}"})
+
+
+@login_required
+def profile_delete(request, pk):
+    obj = get_object_or_404(PatientProfile, pk=pk, owner=request.user)
+    if obj.relationship == PatientProfile.Relationship.SELF:
+        messages.error(request, "Không thể xóa hồ sơ bản thân.")
+        return redirect("accounts:profiles")
+    if request.method == "POST":
+        obj.delete()
+        messages.success(request, "Đã xóa hồ sơ.")
+        return redirect("accounts:profiles")
+    return render(request, "accounts/profile_confirm_delete.html", {"obj": obj})

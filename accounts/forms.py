@@ -58,3 +58,23 @@ class RegisterForm(forms.Form):
             full_name=d["full_name"],
         )
         return user
+
+class PatientProfileForm(forms.ModelForm):
+    class Meta:
+        model = PatientProfile
+        fields = ["relationship", "full_name", "date_of_birth", "gender",
+                  "address", "citizen_id", "insurance_number"]
+        widgets = {
+            "date_of_birth": forms.DateInput(attrs={"type": "date"}, format="%Y-%m-%d"),
+        }
+
+    def __init__(self, *args, is_self=False, **kwargs):
+        super().__init__(*args, **kwargs)
+        if is_self:
+            # Hồ sơ "Bản thân" không được đổi quan hệ
+            self.fields["relationship"].disabled = True
+        else:
+            # Hồ sơ người thân không được chọn "Bản thân"
+            self.fields["relationship"].choices = [
+                c for c in PatientProfile.Relationship.choices if c[0] != "SELF"
+            ]

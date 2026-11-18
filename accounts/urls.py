@@ -14,4 +14,8 @@ urlpatterns = [
         authentication_form=LoginForm,
         redirect_authenticated_user=True), name="login"),
     path("logout/", auth_views.LogoutView.as_view(), name="logout"),
+    path("profiles/", views.profiles, name="profiles"),
+    path("profiles/add/", views.profile_add, name="profile_add"),
+    path("profiles/<int:pk>/edit/", views.profile_edit, name="profile_edit"),
+    path("profiles/<int:pk>/delete/", views.profile_delete, name="profile_delete"),
 ]

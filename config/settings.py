@@ -145,3 +145,4 @@ LOGIN_REDIRECT_URL = "accounts:profiles"
 LOGOUT_REDIRECT_URL = "accounts:login"
 
 AUTH_USER_MODEL = "accounts.User"
+
