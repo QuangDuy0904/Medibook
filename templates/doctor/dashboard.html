@@ -1,0 +1,47 @@
+{% extends "base.html" %}
+{% block title %}Khu vực bác sĩ{% endblock %}
+{% block content %}
+{% if not doctor %}
+<div class="alert alert-warning">
+  Tài khoản này chưa có hồ sơ bác sĩ. Hãy nhờ quản trị viên tạo "Hồ sơ bác sĩ" trong trang quản trị.
+</div>
+{% else %}
+<div class="d-flex justify-content-between align-items-center mb-3">
+  <div>
+    <h3 class="mb-0">{{ doctor }}</h3>
+    <div class="text-muted">{{ doctor.specialty }}</div>
+  </div>
+  {% if is_today %}
+  <form method="post" action="{% url 'doctor:call_next' %}">{% csrf_token %}
+    <button class="btn btn-success">Gọi bệnh nhân kế tiếp</button>
+  </form>
+  {% endif %}
+</div>
+
+<form method="get" class="row g-2 mb-3">
+  <div class="col-6 col-md-4"><input type="date" name="date" value="{{ day|date:'Y-m-d' }}" class="form-control"></div>
+  <div class="col-6 col-md-4">
+    <select name="shift" class="form-select">
+      <option value="">Cả ngày</option>
+      {% for val, label in shift_choices %}
+      <option value="{{ val }}" {% if val == shift %}selected{% endif %}>{{ label }}</option>
+      {% endfor %}
+    </select>
+  </div>
+  <div class="col-12 col-md-4"><button class="btn btn-outline-primary w-100">Lọc</button></div>
+</form>
+
+<h5>Ngày {{ day|date:"d/m/Y" }}</h5>
+{% if groups.consulting %}<h6 class="mt-3">Đang khám</h6>
+  {% for a in groups.consulting %}{% include "doctor/_row.html" %}{% endfor %}{% endif %}
+{% if groups.waiting %}<h6 class="mt-3">Chờ khám (theo số thứ tự)</h6>
+  {% for a in groups.waiting %}{% include "doctor/_row.html" %}{% endfor %}{% endif %}
+{% if groups.upcoming %}<h6 class="mt-3">Chưa đến</h6>
+  {% for a in groups.upcoming %}{% include "doctor/_row.html" %}{% endfor %}{% endif %}
+{% if groups.done %}<h6 class="mt-3">Đã xong / vắng mặt</h6>
+  {% for a in groups.done %}{% include "doctor/_row.html" %}{% endfor %}{% endif %}
+{% if not groups.consulting and not groups.waiting and not groups.upcoming and not groups.done %}
+<div class="alert alert-light border">Không có lịch hẹn nào trong ngày này.</div>
+{% endif %}
+{% endif %}
+{% endblock %}

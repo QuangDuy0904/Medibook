@@ -26,6 +26,14 @@
   </div>
 </div>
 
+{% if appt.note %}
+<div class="card card-body mb-3">
+  <h6>Kết luận của bác sĩ</h6>
+  <div><strong>Chẩn đoán sơ bộ:</strong> {{ appt.note.diagnosis|linebreaksbr }}</div>
+  <div class="mt-1"><strong>Lời dặn:</strong> {{ appt.note.advice|linebreaksbr|default:"—" }}</div>
+</div>
+{% endif %}
+
 {% if appt.can_change_online %}
 <div class="d-flex gap-2">
   <a class="btn btn-outline-primary" href="{% url 'appointments:reschedule' appt.pk %}">Đổi giờ</a>

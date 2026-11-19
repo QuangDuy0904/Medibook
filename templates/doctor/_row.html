@@ -1,0 +1,18 @@
+<div class="d-flex justify-content-between align-items-start border-bottom py-2">
+  <div>
+    {% if a.queue_number %}<span class="badge text-bg-dark fs-6 me-2">{{ a.queue_number }}</span>{% endif %}
+    <strong>{{ a.slot.start_at|time:"H:i" }}</strong> · {{ a.profile.full_name }}
+    <span class="badge text-bg-secondary">{{ a.get_status_display }}</span>
+    <div class="small text-muted">
+      Mã: {{ a.code }}{% if a.profile.date_of_birth %} · Sinh: {{ a.profile.date_of_birth|date:"d/m/Y" }}{% endif %}
+    </div>
+    {% if a.symptoms %}<div class="small">Triệu chứng: {{ a.symptoms }}</div>{% endif %}
+  </div>
+  {% if a.status == "IN_CONSULTATION" %}
+  <a class="btn btn-primary btn-sm text-nowrap" href="{% url 'doctor:consult' a.pk %}">Ghi kết quả</a>
+  {% elif a.status == "COMPLETED" %}
+  <a class="btn btn-outline-primary btn-sm text-nowrap" href="{% url 'doctor:consult' a.pk %}">Xem / sửa ghi chú</a>
+  {% else %}
+  <a class="btn btn-outline-secondary btn-sm text-nowrap" href="{% url 'doctor:consult' a.pk %}">Xem</a>
+  {% endif %}
+</div>

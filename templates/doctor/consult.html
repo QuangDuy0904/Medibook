@@ -1,0 +1,49 @@
+{% extends "base.html" %}
+{% block title %}Khám bệnh{% endblock %}
+{% block content %}
+<a href="{% url 'doctor:dashboard' %}" class="small">← Khu vực bác sĩ</a>
+<div class="card card-body my-3">
+  <div class="d-flex justify-content-between">
+    <h4 class="mb-1">{{ appt.profile.full_name }}</h4>
+    {% if appt.queue_number %}<span class="badge text-bg-dark fs-5">{{ appt.queue_number }}</span>{% endif %}
+  </div>
+  <div class="text-muted">
+    {{ appt.get_status_display }} · {{ appt.slot.start_at|time:"H:i" }} ngày {{ appt.slot.start_at|date:"d/m/Y" }} · Mã {{ appt.code }}
+  </div>
+  <div class="mt-2">
+    Ngày sinh: {{ appt.profile.date_of_birth|date:"d/m/Y"|default:"chưa có" }}
+    · Giới tính: {{ appt.profile.get_gender_display|default:"chưa có" }}
+  </div>
+  <div>Số thẻ BHYT: {{ appt.profile.insurance_number|default:"chưa có" }}</div>
+  <div class="mt-2"><strong>Triệu chứng, lý do khám:</strong> {{ appt.symptoms|default:"—" }}</div>
+</div>
+
+{% if previous %}
+<div class="card card-body mb-3">
+  <h6>Các lần khám trước với bác sĩ</h6>
+  {% for p in previous %}
+  <div class="border-top pt-2 mt-2 small">
+    <strong>{{ p.slot.start_at|date:"d/m/Y" }}</strong>
+    {% if p.note %}
+    <div>Chẩn đoán: {{ p.note.diagnosis|linebreaksbr }}</div>
+    {% if p.note.advice %}<div>Lời dặn: {{ p.note.advice|linebreaksbr }}</div>{% endif %}
+    {% else %}<div class="text-muted">Chưa có ghi chú.</div>{% endif %}
+  </div>
+  {% endfor %}
+</div>
+{% endif %}
+
+{% if can_write %}
+<form method="post" class="card card-body">{% csrf_token %}
+  <h5>{% if appt.status == "COMPLETED" %}Sửa ghi chú sau khám{% else %}Kết quả khám{% endif %}</h5>
+  {{ form.as_p }}
+  <button class="btn btn-primary">
+    {% if appt.status == "COMPLETED" %}Lưu thay đổi{% else %}Lưu và kết thúc khám{% endif %}
+  </button>
+</form>
+{% else %}
+<div class="alert alert-light border">
+  Bệnh nhân chưa được gọi vào khám. Hãy dùng nút "Gọi bệnh nhân kế tiếp" ở trang chính.
+</div>
+{% endif %}
+{% endblock %}

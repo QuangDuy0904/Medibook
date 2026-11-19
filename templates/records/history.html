@@ -1,0 +1,22 @@
+{% extends "base.html" %}
+{% block title %}Lịch sử khám{% endblock %}
+{% block content %}
+<h3>Lịch sử khám</h3>
+{% for v in visits %}
+<div class="card card-body mb-2">
+  <div>
+    <strong>{{ v.slot.start_at|date:"d/m/Y" }}</strong> · {{ v.slot.doctor }}
+    <span class="badge text-bg-info">{{ v.slot.doctor.specialty }}</span>
+  </div>
+  <div class="small text-muted">Người khám: {{ v.profile.full_name }} · Mã: {{ v.code }}</div>
+  {% if v.note %}
+  <div class="mt-2"><strong>Chẩn đoán sơ bộ:</strong> {{ v.note.diagnosis|linebreaksbr }}</div>
+  <div class="mt-1"><strong>Lời dặn:</strong> {{ v.note.advice|linebreaksbr|default:"—" }}</div>
+  {% else %}
+  <div class="mt-2 text-muted">Bác sĩ chưa ghi kết luận.</div>
+  {% endif %}
+</div>
+{% empty %}
+<div class="alert alert-light border">Bạn chưa có lần khám nào hoàn thành.</div>
+{% endfor %}
+{% endblock %}
