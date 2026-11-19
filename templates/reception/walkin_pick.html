@@ -1,0 +1,31 @@
+{% extends "base.html" %}
+{% block title %}Khách vãng lai{% endblock %}
+{% block content %}
+<a href="{% url 'reception:dashboard' %}" class="small">← Quầy tiếp tân</a>
+<h3 class="mt-2">Đặt lịch cho khách vãng lai</h3>
+<form method="get" class="row g-2 mb-3">
+  <div class="col-12 col-md-6">
+    <select name="doctor" class="form-select" required>
+      <option value="">Chọn bác sĩ</option>
+      {% for d in doctors %}
+      <option value="{{ d.pk }}" {% if d.pk|stringformat:"s" == doctor_id %}selected{% endif %}>{{ d }} · {{ d.specialty }}</option>
+      {% endfor %}
+    </select>
+  </div>
+  <div class="col-6 col-md-3"><input type="date" name="date" value="{{ day|date:'Y-m-d' }}" class="form-control"></div>
+  <div class="col-6 col-md-3"><button class="btn btn-primary w-100">Xem giờ trống</button></div>
+</form>
+
+{% if doctor %}
+<h6>{{ doctor }} · ngày {{ day|date:"d/m/Y" }}</h6>
+{% if slots %}
+<div class="d-flex flex-wrap gap-2">
+  {% for s in slots %}
+  <a class="btn btn-outline-success" href="{% url 'reception:walkin_book' s.pk %}">{{ s.start_at|time:"H:i" }}</a>
+  {% endfor %}
+</div>
+{% else %}
+<div class="alert alert-warning">Không còn khung giờ trống trong ngày này.</div>
+{% endif %}
+{% endif %}
+{% endblock %}

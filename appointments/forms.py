@@ -14,3 +14,13 @@ class BookingForm(forms.Form):
     def __init__(self, *args, user, **kwargs):
         super().__init__(*args, **kwargs)
         self.fields["profile"].queryset = user.profiles.all()
+
+class WalkinForm(forms.Form):
+    full_name = forms.CharField(label="Họ tên bệnh nhân", max_length=150)
+    phone = forms.CharField(label="Số điện thoại", max_length=15)
+    symptoms = forms.CharField(
+        label="Triệu chứng, lý do khám", required=False, max_length=1000,
+        widget=forms.Textarea(attrs={"rows": 2}))
+    check_in_now = forms.BooleanField(
+        label="Check-in ngay (bệnh nhân đang có mặt, giờ hẹn trong 30 phút tới)",
+        required=False)

@@ -32,6 +32,11 @@ class Appointment(models.Model):
         CANCELLED = "CANCELLED", "Đã hủy"
         NO_SHOW = "NO_SHOW", "Vắng mặt"
 
+    class Source(models.TextChoices):
+        ONLINE = "ONLINE", "Đặt trực tuyến"
+        RECEPTION = "RECEPTION", "Đặt tại quầy"
+        
+
     # Lịch còn chiếm slot. CANCELLED và NO_SHOW thì nhả slot.
     ACTIVE_STATUSES = ["CONFIRMED", "CHECKED_IN", "IN_CONSULTATION", "COMPLETED"]
 
@@ -59,6 +64,8 @@ class Appointment(models.Model):
     booked_by = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.PROTECT,
                                   related_name="appointments")
     symptoms = models.TextField("triệu chứng, lý do khám", blank=True)
+    source = models.CharField("nguồn đặt", max_length=10, choices=Source.choices,
+                              default=Source.ONLINE)
     status = models.CharField(max_length=20, choices=Status.choices,
                               default=Status.CONFIRMED)
     queue_number = models.PositiveIntegerField("số thứ tự", null=True, blank=True)

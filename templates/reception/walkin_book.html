@@ -1,0 +1,16 @@
+{% extends "base.html" %}
+{% block title %}Đặt lịch tại quầy{% endblock %}
+{% block content %}
+<h3>Đặt lịch tại quầy</h3>
+<div class="card card-body mb-3">
+  <strong>{{ slot.doctor }}</strong>
+  <div>{{ slot.start_at|time:"H:i" }} ngày {{ slot.start_at|date:"d/m/Y" }} · Phí khám tham khảo: {{ slot.doctor.fee_display }}</div>
+</div>
+<form method="post" class="card card-body">{% csrf_token %}
+  {{ form.as_p }}
+  <div class="d-flex gap-2">
+    <button class="btn btn-primary">Đặt lịch</button>
+    <a class="btn btn-outline-secondary" href="{% url 'reception:walkin_pick' %}">Quay lại</a>
+  </div>
+</form>
+{% endblock %}

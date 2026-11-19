@@ -25,4 +25,5 @@ urlpatterns = [
     path("doctors/", include("clinics.urls")),
     path("appointments/", include("appointments.urls")),
     path("", lambda request: redirect("clinics:doctor_list")),
+    path("reception/", include("appointments.reception_urls")),
 ]

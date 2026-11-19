@@ -1,11 +1,13 @@
 from datetime import timedelta
 
 from django.conf import settings
+from django.core.exceptions import ValidationError
 from django.db import IntegrityError, transaction
+from django.db.models import Max
 from django.utils import timezone
 
-from accounts.models import PatientProfile, User
-from clinics.models import TimeSlot
+from accounts.models import PatientProfile, User, phone_validator
+from clinics.models import DoctorProfile, TimeSlot
 from clinics.services import available_slots_qs
 
 from .models import Appointment
@@ -119,4 +121,98 @@ def change_status(appointment_id, new_status):
         appt.cancelled_at = timezone.now()
         fields.append("cancelled_at")
     appt.save(update_fields=fields)
+    return appt
+
+def checkin_problem(appt, now=None):
+    """Lý do chưa check-in được (chuỗi), hoặc None nếu được (FR-13, BR-04)."""
+    now = now or timezone.now()
+    rules = settings.BOOKING_RULES
+    if appt.status == Appointment.Status.CHECKED_IN:
+        return "Lịch hẹn này đã check-in rồi."
+    if appt.status != Appointment.Status.CONFIRMED:
+        return f"Không thể check-in lịch ở trạng thái '{appt.get_status_display()}'."
+
+    start = appt.slot.start_at
+    opens = start - timedelta(minutes=rules.get("CHECKIN_OPEN_MINUTES", 30))
+    late = start + timedelta(minutes=rules["NO_SHOW_GRACE_MINUTES"])
+    if now < opens:
+        return f"Chưa đến giờ check-in. Quầy mở check-in từ {timezone.localtime(opens):%H:%M}."
+    if now > late:
+        return (f"Đã quá giờ hẹn {rules['NO_SHOW_GRACE_MINUTES']} phút, lịch này bị tính là "
+                "vắng mặt. Vui lòng đặt lịch mới cho bệnh nhân.")
+    return None
+
+
+@transaction.atomic
+def check_in(appointment_id):
+    """Check-in và cấp số thứ tự theo từng bác sĩ, từng ngày (FR-13)."""
+    appt = (Appointment.objects.select_for_update(of=("self",))
+            .select_related("slot").filter(pk=appointment_id).first())
+    if appt is None:
+        raise BookingError("Không tìm thấy lịch hẹn.")
+    problem = checkin_problem(appt)
+    if problem:
+        raise BookingError(problem)
+
+    # Khóa dòng bác sĩ: hai lễ tân check-in cùng lúc không thể nhận trùng số
+    DoctorProfile.objects.select_for_update().get(pk=appt.slot.doctor_id)
+    day = timezone.localdate(appt.slot.start_at)
+    last = (Appointment.objects
+            .filter(slot__doctor_id=appt.slot.doctor_id, slot__start_at__date=day,
+                    queue_number__isnull=False)
+            .aggregate(m=Max("queue_number"))["m"] or 0)
+
+    appt.queue_number = last + 1
+    appt.status = Appointment.Status.CHECKED_IN
+    appt.checked_in_at = timezone.now()
+    appt.save(update_fields=["queue_number", "status", "checked_in_at"])
+    return appt
+
+
+@transaction.atomic
+def staff_book_appointment(*, slot_id, phone, full_name, symptoms="", check_in_now=False):
+    """Lễ tân đặt lịch cho khách vãng lai (FR-14).
+    Không áp BR-02 và khóa BR-05 vì hai luật đó chỉ áp cho đặt lịch trực tuyến."""
+    phone = (phone or "").replace(" ", "")
+    full_name = (full_name or "").strip()
+    if not full_name:
+        raise BookingError("Vui lòng nhập họ tên bệnh nhân.")
+    try:
+        phone_validator(phone)
+    except ValidationError:
+        raise BookingError("Số điện thoại không hợp lệ (ví dụ 0912345678).")
+
+    slot = TimeSlot.objects.select_for_update().filter(pk=slot_id).first()
+    if slot is None:
+        raise BookingError("Khung giờ không tồn tại.")
+    if not available_slots_qs().filter(pk=slot.pk).exists():
+        raise BookingError("Khung giờ này không còn trống.")
+
+    # Tìm tài khoản theo SĐT; chưa có thì tạo tài khoản vãng lai (không đăng nhập được)
+    user = User.objects.select_for_update().filter(phone=phone).first()
+    if user is None:
+        user = User.objects.create_user(
+            username=f"walkin-{phone}", phone=phone,
+            first_name=full_name, role=User.Role.PATIENT)
+    profile = user.profiles.filter(full_name__iexact=full_name).first()
+    if profile is None:
+        has_self = user.profiles.filter(
+            relationship=PatientProfile.Relationship.SELF).exists()
+        profile = PatientProfile.objects.create(
+            owner=user, full_name=full_name,
+            relationship=(PatientProfile.Relationship.OTHER if has_self
+                          else PatientProfile.Relationship.SELF))
+
+    try:
+        with transaction.atomic():
+            appt = Appointment.objects.create(
+                slot=slot, profile=profile, booked_by=user,
+                symptoms=(symptoms or "").strip(),
+                source=Appointment.Source.RECEPTION)
+    except IntegrityError:
+        raise BookingError("Khung giờ này vừa có người khác đặt.")
+
+    if check_in_now:
+        # Nếu chưa check-in được (ví dụ còn xa giờ hẹn) thì cả lần đặt bị hủy (rollback)
+        appt = check_in(appt.pk)
     return appt

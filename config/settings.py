@@ -156,6 +156,7 @@ BOOKING_RULES = {
     "NO_SHOW_GRACE_MINUTES": 15,    # BR-04: Quá 15 phút chưa check-in -> No-show
     "NO_SHOW_WINDOW_DAYS": 30,      # BR-05: Cửa sổ 30 ngày xét vi phạm
     "NO_SHOW_MAX_COUNT": 2,         # BR-05: Từ 2 lần No-show trở lên thì khóa
-    "BOOKING_LOCK_DAYS": 30,        # BR-05: Khóa đặt lịch trong 30 ngày
+    "BOOKING_LOCK_DAYS": 30,  
+    "CHECKIN_OPEN_MINUTES": 30,       # BR-05: Khóa đặt lịch trong 30 ngày
 }
 

@@ -1,0 +1,23 @@
+{% extends "base.html" %}
+{% block title %}Check-in{% endblock %}
+{% block content %}
+<a href="{% url 'reception:dashboard' %}" class="small">← Quầy tiếp tân</a>
+<div class="card card-body my-3">
+  <h4 class="mb-1">{{ appt.profile.full_name }}</h4>
+  <div class="text-muted">Mã hẹn: {{ appt.code }} · {{ appt.get_status_display }}</div>
+  <div class="mt-2">Ngày sinh: {{ appt.profile.date_of_birth|date:"d/m/Y"|default:"chưa có" }}</div>
+  <div>Số thẻ BHYT: {{ appt.profile.insurance_number|default:"chưa có" }}</div>
+  <div class="mt-2">Bác sĩ: <strong>{{ appt.slot.doctor }}</strong> ({{ appt.slot.doctor.specialty }})</div>
+  <div>Giờ hẹn: <strong>{{ appt.slot.start_at|time:"H:i" }}</strong> ngày {{ appt.slot.start_at|date:"d/m/Y" }}</div>
+  {% if appt.queue_number %}<div>Số thứ tự: <strong>{{ appt.queue_number }}</strong></div>{% endif %}
+  <div class="small text-muted mt-2">Phí khám tham khảo: {{ appt.slot.doctor.fee_display }} (thu tại quầy)</div>
+</div>
+<p class="small text-muted">Hãy đối chiếu họ tên và ngày sinh với giấy tờ của bệnh nhân.</p>
+{% if problem %}
+<div class="alert alert-warning">{{ problem }}</div>
+{% else %}
+<form method="post">{% csrf_token %}
+  <button class="btn btn-success btn-lg">Xác nhận check-in và cấp số thứ tự</button>
+</form>
+{% endif %}
+{% endblock %}
