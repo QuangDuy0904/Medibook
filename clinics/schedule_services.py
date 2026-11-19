@@ -3,6 +3,7 @@ from django.db.models import Q
 from django.utils import timezone
 
 from appointments.models import Appointment
+from appointments.notifications import notify_cancelled_by_clinic
 from appointments.services import change_status
 
 from .models import DayOff, WorkSchedule
@@ -76,6 +77,9 @@ def add_day_off(*, doctor, date, shift="", reason=""):
     rows = list(affected.values_list("pk", "code"))
     for pk, _code in rows:
         change_status(pk, Appointment.Status.CANCELLED)
+    ids = [pk for pk, _code in rows]
+    if ids:  # chỉ gửi email sau khi giao dịch đã lưu thành công
+        transaction.on_commit(lambda: notify_cancelled_by_clinic(ids, reason))
     return off, [code for _pk, code in rows]
 
 

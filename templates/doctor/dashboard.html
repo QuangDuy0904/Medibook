@@ -11,11 +11,14 @@
     <h3 class="mb-0">{{ doctor }}</h3>
     <div class="text-muted">{{ doctor.specialty }}</div>
   </div>
-  {% if is_today %}
-  <form method="post" action="{% url 'doctor:call_next' %}">{% csrf_token %}
-    <button class="btn btn-success">Gọi bệnh nhân kế tiếp</button>
-  </form>
-  {% endif %}
+  <div class="d-flex gap-2">
+    <a class="btn btn-outline-primary" href="{% url 'doctor_schedule:home' %}">Lịch làm việc</a>
+    {% if is_today %}
+    <form method="post" action="{% url 'doctor:call_next' %}">{% csrf_token %}
+      <button class="btn btn-success">Gọi bệnh nhân kế tiếp</button>
+    </form>
+    {% endif %}
+  </div>
 </div>
 
 <form method="get" class="row g-2 mb-3">

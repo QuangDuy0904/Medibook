@@ -1,6 +1,13 @@
 {% extends "base.html" %}
 {% block title %}Lịch hẹn của tôi{% endblock %}
 {% block content %}
+{% if user.is_booking_locked %}
+<div class="alert alert-danger">
+  Tài khoản của bạn bị tạm khóa đặt lịch trực tuyến đến
+  <strong>{{ user.booking_locked_until|date:"d/m/Y H:i" }}</strong> do vắng mặt nhiều lần.
+  Bạn vẫn có thể đặt lịch trực tiếp tại quầy tiếp tân.
+</div>
+{% endif %}
 <div class="d-flex justify-content-between align-items-center mb-3">
   <h3 class="mb-0">Lịch hẹn của tôi</h3>
   <a class="btn btn-primary btn-sm" href="{% url 'clinics:doctor_list' %}">+ Đặt lịch mới</a>

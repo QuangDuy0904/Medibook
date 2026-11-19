@@ -216,3 +216,84 @@ def staff_book_appointment(*, slot_id, phone, full_name, symptoms="", check_in_n
         # Nếu chưa check-in được (ví dụ còn xa giờ hẹn) thì cả lần đặt bị hủy (rollback)
         appt = check_in(appt.pk)
     return appt
+
+@transaction.atomic
+def apply_no_show_penalty(user_id):
+    """BR-05: từ 2 lần vắng mặt trong 30 ngày thì khóa đặt lịch trực tuyến 30 ngày.
+    Trả về True nếu vừa khóa tài khoản."""
+    rules = settings.BOOKING_RULES
+    user = User.objects.select_for_update().get(pk=user_id)
+    since = timezone.now() - timedelta(days=rules["NO_SHOW_WINDOW_DAYS"])
+    count = Appointment.objects.filter(
+        booked_by=user, status=Appointment.Status.NO_SHOW,
+        slot__start_at__gte=since).count()
+    if count >= rules["NO_SHOW_LIMIT"] and not user.is_booking_locked():
+        user.lock_booking()
+        return True
+    return False
+
+
+@transaction.atomic
+def mark_no_show(appointment_id, now=None):
+    """BR-04: đánh dấu vắng mặt (chỉ khi đã quá giờ hẹn) rồi áp dụng BR-05."""
+    now = now or timezone.now()
+    grace = timedelta(minutes=settings.BOOKING_RULES["NO_SHOW_GRACE_MINUTES"])
+    appt = (Appointment.objects.select_for_update(of=("self",))
+            .select_related("slot").filter(pk=appointment_id).first())
+    if appt is None:
+        raise BookingError("Không tìm thấy lịch hẹn.")
+    if appt.status != Appointment.Status.CONFIRMED:
+        raise BookingError("Lịch hẹn không còn ở trạng thái Đã xác nhận.")
+    if appt.slot.start_at + grace >= now:
+        raise BookingError("Chưa quá giờ hẹn để tính là vắng mặt.")
+
+    appt = change_status(appt.pk, Appointment.Status.NO_SHOW)
+    apply_no_show_penalty(appt.booked_by_id)
+    return appt
+
+
+def process_overdue_appointments(now=None):
+    """Quét và đánh dấu vắng mặt mọi lịch quá hạn. Trả về số lịch đã xử lý."""
+    now = now or timezone.now()
+    grace = timedelta(minutes=settings.BOOKING_RULES["NO_SHOW_GRACE_MINUTES"])
+    ids = list(Appointment.objects.filter(
+        status=Appointment.Status.CONFIRMED,
+        slot__start_at__lt=now - grace).values_list("pk", flat=True))
+    done = 0
+    for pk in ids:
+        try:
+            mark_no_show(pk, now=now)
+        except BookingError:
+            continue  # trạng thái vừa đổi (ví dụ lễ tân vừa check-in), bỏ qua
+        done += 1
+    return done
+
+def send_due_reminders(now=None):
+    """6.3: gửi email nhắc cho lịch Đã xác nhận sắp diễn ra, mỗi lịch một lần.
+    Trả về số email đã gửi."""
+    from .notifications import send_reminder_email
+
+    now = now or timezone.now()
+    hours = settings.BOOKING_RULES.get("REMINDER_HOURS_BEFORE", 24)
+    ids = list(
+        Appointment.objects.filter(
+            status=Appointment.Status.CONFIRMED, reminder_sent_at__isnull=True,
+            slot__start_at__gt=now, slot__start_at__lte=now + timedelta(hours=hours),
+            booked_by__email__isnull=False)
+        .exclude(booked_by__email="").values_list("pk", flat=True))
+
+    sent = 0
+    for pk in ids:
+        with transaction.atomic():
+            appt = (Appointment.objects.select_for_update(of=("self",))
+                    .select_related("booked_by", "profile",
+                                    "slot__doctor__user", "slot__doctor__specialty")
+                    .filter(pk=pk, status=Appointment.Status.CONFIRMED,
+                            reminder_sent_at__isnull=True).first())
+            if appt is None:  # vừa bị hủy, check-in hoặc đã được nhắc
+                continue
+            if send_reminder_email(appt):
+                appt.reminder_sent_at = now
+                appt.save(update_fields=["reminder_sent_at"])
+                sent += 1
+    return sent

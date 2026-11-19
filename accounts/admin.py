@@ -15,6 +15,12 @@ class CustomUserAdmin(UserAdmin):
     add_fieldsets = UserAdmin.add_fieldsets + (
         ("Thông tin bổ sung", {"fields": ("last_name", "first_name", "role", "phone", "email")}),
     )
+    actions = ["unlock_booking"]
+
+    @admin.action(description="Mở khóa đặt lịch trực tuyến")
+    def unlock_booking(self, request, queryset):
+        n = queryset.update(booking_locked_until=None)
+        self.message_user(request, f"Đã mở khóa {n} tài khoản.")
 
 
 @admin.register(PatientProfile)

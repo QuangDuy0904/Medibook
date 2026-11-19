@@ -71,6 +71,7 @@ class Appointment(models.Model):
     queue_number = models.PositiveIntegerField("số thứ tự", null=True, blank=True)
     checked_in_at = models.DateTimeField(null=True, blank=True)
     cancelled_at = models.DateTimeField(null=True, blank=True)
+    reminder_sent_at = models.DateTimeField(null=True, blank=True)
     created_at = models.DateTimeField(auto_now_add=True)
 
     class Meta:
