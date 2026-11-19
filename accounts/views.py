@@ -19,10 +19,19 @@ def register(request):
     return render(request, "accounts/register.html", {"form": form})
 
 
+ROLE_HOME = {
+    "DOCTOR": "doctor:dashboard",
+    "RECEPTIONIST": "reception:dashboard",
+    "ADMIN": "reception:dashboard",   # tạm, Giai đoạn 8 sẽ có dashboard thống kê cho admin
+}
+
 @login_required
 def home(request):
-    return redirect("accounts:profiles")
-
+    """Sau đăng nhập, đưa mỗi vai trò về đúng khu vực làm việc của họ."""
+    user = request.user
+    if user.is_superuser:
+        return redirect("reception:dashboard")
+    return redirect(ROLE_HOME.get(user.role, "accounts:profiles"))
 
 @login_required
 def profiles(request):

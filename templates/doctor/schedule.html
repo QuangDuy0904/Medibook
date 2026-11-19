@@ -1,0 +1,69 @@
+{% extends "base.html" %}
+{% block title %}Lịch làm việc{% endblock %}
+{% block content %}
+<a href="{% url 'doctor:dashboard' %}" class="small">← Khu vực bác sĩ</a>
+<h3 class="mt-2">Lịch làm việc của {{ doctor }}</h3>
+
+<div class="row g-3 mb-4">
+  <div class="col-md-6">
+    <form method="post" action="{% url 'doctor_schedule:add' %}" class="card card-body h-100">{% csrf_token %}
+      <h5>Thêm ca làm việc</h5>
+      {{ schedule_form.as_p }}
+      <button class="btn btn-primary">Tạo ca và sinh khung giờ</button>
+    </form>
+  </div>
+  <div class="col-md-6">
+    <form method="post" action="{% url 'doctor_schedule:off_add' %}" class="card card-body h-100">{% csrf_token %}
+      <h5>Báo nghỉ, báo bận</h5>
+      {{ off_form.as_p }}
+      <div class="alert alert-warning small">
+        Các lịch hẹn <strong>Đã xác nhận</strong> trong thời gian nghỉ sẽ bị hủy.
+      </div>
+      <button class="btn btn-warning">Báo nghỉ</button>
+    </form>
+  </div>
+</div>
+
+<h5>Ca làm việc sắp tới</h5>
+{% for s in schedules %}
+<div class="card card-body mb-2">
+  <div class="d-flex justify-content-between align-items-center">
+    <div>
+      <strong>{{ s.date|date:"l d/m/Y" }}</strong>
+      <span class="badge text-bg-info">{{ s.get_shift_display }}</span>
+      <div class="small text-muted">
+        {{ s.start_time|time:"H:i" }} đến {{ s.end_time|time:"H:i" }}
+        · {{ s.slot_minutes }} phút/khung · {{ s.n_slots }} khung giờ · {{ s.n_booked }} đã có lịch
+      </div>
+    </div>
+    {% if s.n_booked == 0 %}
+    <form method="post" action="{% url 'doctor_schedule:delete' s.pk %}"
+          onsubmit="return confirm('Xóa ca làm việc này?')">{% csrf_token %}
+      <button class="btn btn-outline-danger btn-sm">Xóa</button>
+    </form>
+    {% endif %}
+  </div>
+</div>
+{% empty %}
+<div class="alert alert-light border">Bạn chưa có ca làm việc nào sắp tới.</div>
+{% endfor %}
+
+<h5 class="mt-4">Ngày nghỉ sắp tới</h5>
+{% for o in days_off %}
+<div class="card card-body mb-2">
+  <div class="d-flex justify-content-between align-items-center">
+    <div>
+      <strong>{{ o.date|date:"l d/m/Y" }}</strong>
+      <span class="badge text-bg-warning">{{ o.get_shift_display|default:"Cả ngày" }}</span>
+      {% if o.reason %}<div class="small text-muted">{{ o.reason }}</div>{% endif %}
+    </div>
+    <form method="post" action="{% url 'doctor_schedule:off_delete' o.pk %}"
+          onsubmit="return confirm('Bỏ báo nghỉ này? Lịch hẹn đã bị hủy sẽ không tự khôi phục.')">{% csrf_token %}
+      <button class="btn btn-outline-secondary btn-sm">Bỏ báo nghỉ</button>
+    </form>
+  </div>
+</div>
+{% empty %}
+<div class="alert alert-light border">Chưa có ngày nghỉ nào sắp tới.</div>
+{% endfor %}
+{% endblock %}

@@ -145,7 +145,7 @@ MAILERS = {
 
 AUTHENTICATION_BACKENDS = ["accounts.backends.IdentifierBackend"]
 LOGIN_URL = "accounts:login"
-LOGIN_REDIRECT_URL = "accounts:profiles"
+LOGIN_REDIRECT_URL = "accounts:home"
 LOGOUT_REDIRECT_URL = "accounts:login"
 
 AUTH_USER_MODEL = "accounts.User"

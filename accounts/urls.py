@@ -13,7 +13,7 @@ urlpatterns = [
         template_name="accounts/login.html",
         authentication_form=LoginForm,
         redirect_authenticated_user=True), name="login"),
-    path("logout/", auth_views.LogoutView.as_view(), name="logout"),
+    path("logout/", auth_views.LogoutView.as_view(next_page="accounts:login"), name="logout"),
     path("profiles/", views.profiles, name="profiles"),
     path("profiles/add/", views.profile_add, name="profile_add"),
     path("profiles/<int:pk>/edit/", views.profile_edit, name="profile_edit"),

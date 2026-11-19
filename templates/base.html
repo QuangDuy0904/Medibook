@@ -9,12 +9,27 @@
 <body class="bg-light">
 <nav class="navbar navbar-expand bg-white border-bottom mb-4">
   <div class="container">
-    <a class="navbar-brand" href="/">Medibook</a>
+    <a class="navbar-brand" href="{% if user.is_authenticated %}{% url 'accounts:home' %}{% else %}/{% endif %}">Medibook</a>
     <div class="ms-auto d-flex gap-2 align-items-center">
+
+      {# Khách chưa đăng nhập và bệnh nhân: tìm bác sĩ #}
+      {% if not user.is_authenticated or user.role == "PATIENT" and not user.is_superuser %}
+        <a class="nav-link me-3" href="{% url 'clinics:doctor_list' %}">Tìm bác sĩ</a>
+      {% endif %}
+
       {% if user.is_authenticated %}
-        {% if user.role == "PATIENT" %}
+        {% if user.role == "PATIENT" and not user.is_superuser %}
+          <a class="nav-link me-3" href="{% url 'accounts:profiles' %}">Hồ sơ khám</a>
           <a class="nav-link me-3" href="{% url 'appointments:mine' %}">Lịch hẹn của tôi</a>
+          <a class="nav-link me-3" href="{% url 'records:history' %}">Lịch sử khám</a>
         {% endif %}
+
+        {# Chỉ superuser mới cần chuyển qua lại giữa các khu vực #}
+        {% if user.is_superuser %}
+          <a class="nav-link me-3" href="{% url 'doctor:dashboard' %}">Khu vực bác sĩ</a>
+          <a class="nav-link me-3" href="{% url 'reception:dashboard' %}">Quầy tiếp tân</a>
+        {% endif %}
+
         <span class="text-muted small">{{ user }}</span>
         <form method="post" action="{% url 'accounts:logout' %}">{% csrf_token %}
           <button class="btn btn-outline-secondary btn-sm">Đăng xuất</button>
@@ -26,7 +41,7 @@
     </div>
   </div>
 </nav>
-<main class="container" style="max-width: 720px;">
+<main class="container" style="max-width: 960px;">
   {% for m in messages %}
     <div class="alert alert-{% if m.tags == 'error' %}danger{% else %}{{ m.tags }}{% endif %}">{{ m }}</div>
   {% endfor %}

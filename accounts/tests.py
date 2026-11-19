@@ -53,3 +53,34 @@ class SessionSeparationTests(TestCase):
         self.client.post("/admin/logout/")
         r = self.client.get(reverse("accounts:profiles"))
         self.assertEqual(r.wsgi_request.user, self.patient)
+
+class LoginRedirectTests(TestCase):
+    def go_home(self, role, **extra):
+        user = User.objects.create_user(
+            username=f"u-{role.lower()}", password="x12345!", role=role, **extra)
+        self.client.force_login(user)
+        return self.client.get(reverse("accounts:home"))
+
+    def test_doctor_goes_to_doctor_dashboard(self):
+        r = self.go_home("DOCTOR")
+        self.assertRedirects(r, reverse("doctor:dashboard"), fetch_redirect_response=False)
+
+    def test_receptionist_goes_to_reception(self):
+        r = self.go_home("RECEPTIONIST")
+        self.assertRedirects(r, reverse("reception:dashboard"), fetch_redirect_response=False)
+
+    def test_patient_goes_to_profiles(self):
+        r = self.go_home("PATIENT")
+        self.assertRedirects(r, reverse("accounts:profiles"), fetch_redirect_response=False)
+
+    def test_superuser_goes_to_reception(self):
+        admin = User.objects.create_superuser(username="root", password="x12345!")
+        self.client.force_login(admin)
+        r = self.client.get(reverse("accounts:home"))
+        self.assertRedirects(r, reverse("reception:dashboard"), fetch_redirect_response=False)
+
+    def test_login_form_sends_to_home(self):
+        User.objects.create_user(username="doc9", password="x12345!", role="DOCTOR")
+        r = self.client.post(reverse("accounts:login"),
+                             {"username": "doc9", "password": "x12345!"})
+        self.assertRedirects(r, reverse("accounts:home"), fetch_redirect_response=False)
