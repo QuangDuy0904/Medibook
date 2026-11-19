@@ -31,6 +31,12 @@ class User(AbstractUser):
     )
     # BR-05: bị khóa đặt lịch online đến thời điểm này
     booking_locked_until = models.DateTimeField(null=True, blank=True)
+    first_name = models.CharField("tên", max_length=150, blank=True)
+    last_name = models.CharField("họ và tên đệm", max_length=150, blank=True)
+
+    def get_full_name(self):
+        parts = (self.last_name.strip(), self.first_name.strip())
+        return " ".join(p for p in parts if p)
 
     def is_booking_locked(self):
         return bool(

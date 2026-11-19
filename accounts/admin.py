@@ -13,7 +13,7 @@ class CustomUserAdmin(UserAdmin):
         ("Thông tin bổ sung", {"fields": ("role", "phone", "booking_locked_until")}),
     )
     add_fieldsets = UserAdmin.add_fieldsets + (
-        ("Thông tin bổ sung", {"fields": ("first_name", "last_name", "role", "phone", "email")}),
+        ("Thông tin bổ sung", {"fields": ("last_name", "first_name", "role", "phone", "email")}),
     )
 
 
