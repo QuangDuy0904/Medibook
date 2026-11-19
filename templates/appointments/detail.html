@@ -1,0 +1,43 @@
+{% extends "base.html" %}
+{% block title %}Lịch hẹn {{ appt.code }}{% endblock %}
+{% block content %}
+<a href="{% url 'appointments:mine' %}" class="small">← Lịch hẹn của tôi</a>
+<div class="card card-body my-3">
+  <div class="row g-3">
+    <div class="col-md-8">
+      <h4 class="mb-1">{{ appt.slot.doctor }}</h4>
+      <div><span class="badge text-bg-info">{{ appt.slot.doctor.specialty }}</span>
+        <span class="badge text-bg-secondary">{{ appt.get_status_display }}</span></div>
+      <div class="mt-2">
+        Thời gian: <strong>{{ appt.slot.start_at|time:"H:i" }}</strong>
+        ngày <strong>{{ appt.slot.start_at|date:"d/m/Y" }}</strong>
+      </div>
+      <div>Người khám: {{ appt.profile.full_name }}</div>
+      <div>Triệu chứng: {{ appt.symptoms|default:"—" }}</div>
+      <div class="text-muted small">Phí khám tham khảo: {{ appt.slot.doctor.fee_display }} (thanh toán tại quầy)</div>
+      {% if appt.queue_number %}<div class="mt-2">Số thứ tự: <strong>{{ appt.queue_number }}</strong></div>{% endif %}
+    </div>
+    <div class="col-md-4 text-center">
+      {% if appt.status == "CONFIRMED" or appt.status == "CHECKED_IN" %}
+      <img src="{% url 'appointments:qr' appt.pk %}" alt="QR {{ appt.code }}" class="img-fluid" style="max-width:200px">
+      {% endif %}
+      <div class="fw-bold mt-1">{{ appt.code }}</div>
+    </div>
+  </div>
+</div>
+
+{% if appt.can_change_online %}
+<div class="d-flex gap-2">
+  <a class="btn btn-outline-primary" href="{% url 'appointments:reschedule' appt.pk %}">Đổi giờ</a>
+  <form method="post" action="{% url 'appointments:cancel' appt.pk %}"
+        onsubmit="return confirm('Bạn chắc chắn muốn hủy lịch hẹn này?')">{% csrf_token %}
+    <button class="btn btn-outline-danger">Hủy lịch</button>
+  </form>
+</div>
+{% elif appt.status == "CONFIRMED" %}
+<div class="alert alert-warning">
+  Chỉ hủy hoặc đổi trực tuyến được trước giờ khám tối thiểu {{ rules.CANCEL_MIN_HOURS }} tiếng.
+  Vui lòng gọi tổng đài phòng khám.
+</div>
+{% endif %}
+{% endblock %}

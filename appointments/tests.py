@@ -1,4 +1,5 @@
 from datetime import time, timedelta
+from django.urls import reverse
 
 from django.db import IntegrityError, transaction
 from django.test import TestCase
@@ -148,3 +149,33 @@ class RescheduleAndStatusTests(BookingBase):
         change_status(appt.pk, "COMPLETED")
         with self.assertRaises(BookingError):
             change_status(appt.pk, "CANCELLED")
+
+class ViewTests(BookingBase):
+    def test_book_requires_login(self):
+        slot = self.make_slot()
+        r = self.client.get(reverse("appointments:book", args=[slot.pk]))
+        self.assertEqual(r.status_code, 302)
+        self.assertIn("/accounts/login/", r.url)
+
+    def test_book_via_web(self):
+        slot = self.make_slot()
+        self.client.force_login(self.u1)
+        r = self.client.post(reverse("appointments:book", args=[slot.pk]),
+                             {"profile": self.p1.pk, "symptoms": "Ho kéo dài"})
+        appt = Appointment.objects.get()
+        self.assertRedirects(r, reverse("appointments:detail", args=[appt.pk]))
+
+    def test_others_cannot_view_detail_or_qr(self):
+        appt = self.book(self.u1, self.p1, self.make_slot())
+        self.client.force_login(self.u2)
+        self.assertEqual(
+            self.client.get(reverse("appointments:detail", args=[appt.pk])).status_code, 404)
+        self.assertEqual(
+            self.client.get(reverse("appointments:qr", args=[appt.pk])).status_code, 404)
+
+    def test_owner_gets_qr_png(self):
+        appt = self.book(self.u1, self.p1, self.make_slot())
+        self.client.force_login(self.u1)
+        r = self.client.get(reverse("appointments:qr", args=[appt.pk]))
+        self.assertEqual(r["Content-Type"], "image/png")
+        self.assertTrue(r.content.startswith(b"\x89PNG"))

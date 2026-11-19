@@ -1,0 +1,11 @@
+<div class="card card-body mb-2">
+  <div class="d-flex justify-content-between align-items-start gap-2">
+    <div>
+      <strong>{{ a.slot.start_at|date:"d/m/Y" }} lúc {{ a.slot.start_at|time:"H:i" }}</strong>
+      <span class="badge text-bg-{% if a.status == 'CONFIRMED' %}primary{% elif a.status == 'COMPLETED' %}success{% elif a.status == 'CANCELLED' or a.status == 'NO_SHOW' %}secondary{% else %}warning{% endif %}">{{ a.get_status_display }}</span>
+      <div>{{ a.slot.doctor }} · {{ a.slot.doctor.specialty }}</div>
+      <div class="small text-muted">Người khám: {{ a.profile.full_name }} · Mã: {{ a.code }}</div>
+    </div>
+    <a class="btn btn-outline-primary btn-sm text-nowrap" href="{% url 'appointments:detail' a.pk %}">Chi tiết</a>
+  </div>
+</div>

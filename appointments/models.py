@@ -6,6 +6,7 @@ from django.db.models import Q
 from django.utils import timezone
 
 from accounts.models import PatientProfile
+from datetime import timedelta
 from clinics.models import TimeSlot
 
 CODE_ALPHABET = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789"  # bỏ O/0, I/1 cho dễ đọc
@@ -43,6 +44,12 @@ class Appointment(models.Model):
         "CANCELLED": set(),
         "NO_SHOW": set(),
     }
+
+    def can_change_online(self):
+        """Còn được hủy/đổi lịch trực tuyến không (BR-03)."""
+        hours = settings.BOOKING_RULES["CANCEL_MIN_HOURS"]
+        return (self.status == self.Status.CONFIRMED
+                and self.slot.start_at - timezone.now() >= timedelta(hours=hours))
 
     code = models.CharField("mã hẹn", max_length=20, unique=True, editable=False)
     slot = models.ForeignKey(TimeSlot, on_delete=models.PROTECT,

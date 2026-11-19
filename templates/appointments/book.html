@@ -1,0 +1,36 @@
+{% extends "base.html" %}
+{% block title %}Đặt lịch khám{% endblock %}
+{% block content %}
+<h3>Xác nhận đặt lịch</h3>
+<div class="card card-body mb-3">
+  <div>
+    <strong>{{ slot.doctor }}</strong>
+    <span class="badge text-bg-info">{{ slot.doctor.specialty }}</span>
+  </div>
+  <div class="mt-1">
+    Thời gian: <strong>{{ slot.start_at|time:"H:i" }}</strong>
+    ngày <strong>{{ slot.start_at|date:"d/m/Y" }}</strong>
+  </div>
+  <div class="small text-muted">
+    Phí khám tham khảo: {{ slot.doctor.fee_display }} · Thanh toán trực tiếp tại quầy khi đến khám.
+  </div>
+</div>
+
+{% if not has_profiles %}
+<div class="alert alert-warning">
+  Bạn chưa có hồ sơ khám nào. <a href="{% url 'accounts:profile_add' %}">Tạo hồ sơ</a> trước khi đặt lịch.
+</div>
+{% else %}
+<form method="post" class="card card-body">{% csrf_token %}
+  {{ form.as_p }}
+  <div class="alert alert-light border small">
+    Vui lòng có mặt tại quầy tiếp tân trước giờ hẹn tối thiểu {{ rules.ARRIVE_EARLY_MINUTES }} phút.
+    Quá giờ hẹn {{ rules.NO_SHOW_GRACE_MINUTES }} phút chưa check-in, lịch sẽ bị tính là vắng mặt.
+  </div>
+  <div class="d-flex gap-2">
+    <button class="btn btn-primary">Xác nhận đặt lịch</button>
+    <a class="btn btn-outline-secondary" href="{% url 'clinics:doctor_detail' slot.doctor_id %}">Quay lại</a>
+  </div>
+</form>
+{% endif %}
+{% endblock %}

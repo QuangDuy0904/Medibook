@@ -25,9 +25,9 @@
 {% if slots %}
 <div class="d-flex flex-wrap gap-2">
   {% for s in slots %}
-  <button class="btn btn-outline-success" disabled title="Chức năng đặt lịch làm ở Giai đoạn 3">
+  <a class="btn btn-outline-success" href="{% url 'appointments:book' s.pk %}">
     {{ s.start_at|time:"H:i" }}
-  </button>
+  </a>
   {% endfor %}
 </div>
 <p class="small text-muted mt-2">Nút đặt lịch sẽ hoạt động ở Giai đoạn 3.</p>
