@@ -1,12 +1,11 @@
 from django.contrib import messages
-from django.contrib.auth.decorators import login_required
 from django.core.exceptions import PermissionDenied
 from django.shortcuts import get_object_or_404, redirect, render
 from django.utils import timezone
 from django.utils.dateparse import parse_date
 from django.views.decorators.http import require_POST
 
-from accounts.permissions import doctor_required
+from accounts.permissions import doctor_required, patient_required
 from appointments.models import Appointment
 from appointments.services import BookingError
 from clinics.models import DoctorProfile, WorkSchedule
@@ -109,8 +108,7 @@ def consult(request, pk):
     return render(request, "doctor/consult.html", {
         "appt": appt, "form": form, "can_write": can_write, "previous": previous})
 
-
-@login_required
+@patient_required
 def history(request):
     """5.3: bệnh nhân xem lại các lần khám kèm kết luận (FR-16)."""
     visits = (Appointment.objects.filter(booked_by=request.user, status=S.COMPLETED)

@@ -25,9 +25,12 @@
         {% endif %}
 
         {# Chỉ superuser mới cần chuyển qua lại giữa các khu vực #}
+        {% if user.role == "ADMIN" or user.is_superuser %}
+          <a class="nav-link me-3" href="{% url 'analytics:dashboard' %}">Thống kê</a>
+          <a class="nav-link me-3" href="{% url 'reception:dashboard' %}">Quầy tiếp tân</a>
+        {% endif %}
         {% if user.is_superuser %}
           <a class="nav-link me-3" href="{% url 'doctor:dashboard' %}">Khu vực bác sĩ</a>
-          <a class="nav-link me-3" href="{% url 'reception:dashboard' %}">Quầy tiếp tân</a>
         {% endif %}
 
         <span class="text-muted small">{{ user }}</span>

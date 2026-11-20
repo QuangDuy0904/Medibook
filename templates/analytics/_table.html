@@ -1,0 +1,33 @@
+<h5 class="mt-4">{{ title }}</h5>
+<div class="table-responsive">
+  <table class="table table-sm align-middle bg-white border">
+    <thead>
+      <tr>
+        <th>{{ first }}</th>
+        <th style="width:30%">Số cuộc hẹn</th>
+        <th class="text-end">Hoàn thành</th>
+        <th class="text-end">Đã hủy</th>
+        <th class="text-end">Vắng mặt</th>
+        <th class="text-end">Tỷ lệ vắng</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for r in rows %}
+      <tr>
+        <td>{{ r.label }}</td>
+        <td>
+          <div class="progress" style="height:20px">
+            <div class="progress-bar" style="width: {{ r.bar }}%; min-width: 2em">{{ r.total }}</div>
+          </div>
+        </td>
+        <td class="text-end">{{ r.completed }}</td>
+        <td class="text-end">{{ r.cancelled }}</td>
+        <td class="text-end">{{ r.no_show }}</td>
+        <td class="text-end">{% if r.rate is None %}—{% else %}{{ r.rate }}%{% endif %}</td>
+      </tr>
+      {% empty %}
+      <tr><td colspan="6" class="text-muted">Không có dữ liệu trong khoảng này.</td></tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>

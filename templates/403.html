@@ -1,0 +1,10 @@
+{% extends "base.html" %}
+{% block title %}Không có quyền truy cập{% endblock %}
+{% block content %}
+<div class="card card-body text-center py-5">
+  <h1 class="display-5">403</h1>
+  <p class="lead mb-1">Bạn không có quyền truy cập trang này.</p>
+  <p class="text-muted">Trang này dành cho một vai trò khác. Hãy quay về khu vực làm việc của bạn.</p>
+  <div><a class="btn btn-primary" href="{% url 'accounts:home' %}">Về trang chính</a></div>
+</div>
+{% endblock %}

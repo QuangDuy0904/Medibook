@@ -21,3 +21,5 @@ def role_required(*roles):
 
 reception_required = role_required("RECEPTIONIST", "ADMIN")
 doctor_required = role_required("DOCTOR")
+patient_required = role_required("PATIENT")
+admin_required = role_required("ADMIN")

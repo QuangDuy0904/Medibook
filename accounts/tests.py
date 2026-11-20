@@ -73,12 +73,16 @@ class LoginRedirectTests(TestCase):
         r = self.go_home("PATIENT")
         self.assertRedirects(r, reverse("accounts:profiles"), fetch_redirect_response=False)
 
-    def test_superuser_goes_to_reception(self):
+    def test_superuser_goes_to_analytics(self):
         admin = User.objects.create_superuser(username="root", password="x12345!")
         self.client.force_login(admin)
         r = self.client.get(reverse("accounts:home"))
-        self.assertRedirects(r, reverse("reception:dashboard"), fetch_redirect_response=False)
+        self.assertRedirects(r, reverse("analytics:dashboard"), fetch_redirect_response=False)
 
+    def test_admin_role_goes_to_analytics(self):
+        r = self.go_home("ADMIN")
+        self.assertRedirects(r, reverse("analytics:dashboard"), fetch_redirect_response=False)
+    
     def test_login_form_sends_to_home(self):
         User.objects.create_user(username="doc9", password="x12345!", role="DOCTOR")
         r = self.client.post(reverse("accounts:login"),

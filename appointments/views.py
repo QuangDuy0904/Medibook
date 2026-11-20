@@ -4,11 +4,11 @@ from datetime import timedelta
 import qrcode
 from django.conf import settings
 from django.contrib import messages
-from django.contrib.auth.decorators import login_required
 from django.http import HttpResponse
 from django.shortcuts import get_object_or_404, redirect, render
 from django.utils import timezone
 from django.views.decorators.http import require_POST
+from accounts.permissions import patient_required
 
 from clinics.models import TimeSlot
 from clinics.services import available_slots_qs
@@ -30,7 +30,7 @@ def _my_appointment(request, pk):
         pk=pk, booked_by=request.user)
 
 
-@login_required
+@patient_required
 def book(request, slot_id):
     slot = get_object_or_404(
         TimeSlot.objects.select_related("doctor__user", "doctor__specialty"), pk=slot_id)
@@ -59,7 +59,7 @@ def book(request, slot_id):
     })
 
 
-@login_required
+@patient_required
 def mine(request):
     qs = (Appointment.objects.filter(booked_by=request.user)
           .select_related("slot__doctor__user", "slot__doctor__specialty", "profile"))
@@ -69,13 +69,13 @@ def mine(request):
     })
 
 
-@login_required
+@patient_required
 def detail(request, pk):
     return render(request, "appointments/detail.html", {
         "appt": _my_appointment(request, pk), "rules": settings.BOOKING_RULES})
 
 
-@login_required
+@patient_required
 @require_POST
 def cancel(request, pk):
     try:
@@ -86,7 +86,7 @@ def cancel(request, pk):
     return redirect("appointments:mine")
 
 
-@login_required
+@patient_required
 def reschedule(request, pk):
     appt = _my_appointment(request, pk)
     if not appt.can_change_online():
@@ -115,7 +115,7 @@ def reschedule(request, pk):
     return render(request, "appointments/reschedule.html", {"appt": appt, "slots": slots})
 
 
-@login_required
+@patient_required
 def qr_png(request, pk):
     """Ảnh QR chứa mã hẹn (FR-10), sinh tức thời, không lưu file."""
     appt = _my_appointment(request, pk)

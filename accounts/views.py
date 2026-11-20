@@ -1,5 +1,6 @@
 from django.contrib import messages
 from django.contrib.auth import login
+from .permissions import patient_required
 from django.contrib.auth.decorators import login_required
 from django.shortcuts import get_object_or_404, redirect, render
 
@@ -22,24 +23,25 @@ def register(request):
 ROLE_HOME = {
     "DOCTOR": "doctor:dashboard",
     "RECEPTIONIST": "reception:dashboard",
-    "ADMIN": "reception:dashboard",   # tạm, Giai đoạn 8 sẽ có dashboard thống kê cho admin
+    "ADMIN": "analytics:dashboard",
 }
+
 
 @login_required
 def home(request):
     """Sau đăng nhập, đưa mỗi vai trò về đúng khu vực làm việc của họ."""
     user = request.user
     if user.is_superuser:
-        return redirect("reception:dashboard")
+        return redirect("analytics:dashboard")
     return redirect(ROLE_HOME.get(user.role, "accounts:profiles"))
 
-@login_required
+@patient_required
 def profiles(request):
     return render(request, "accounts/profiles.html",
                   {"profiles": request.user.profiles.all()})
 
 
-@login_required
+@patient_required
 def profile_add(request):
     form = PatientProfileForm(request.POST or None)
     if request.method == "POST" and form.is_valid():
@@ -51,8 +53,7 @@ def profile_add(request):
     return render(request, "accounts/profile_form.html",
                   {"form": form, "title": "Thêm hồ sơ người thân"})
 
-
-@login_required
+@patient_required
 def profile_edit(request, pk):
     # Chỉ lấy hồ sơ của chính mình, người khác gõ URL sẽ ra 404
     obj = get_object_or_404(PatientProfile, pk=pk, owner=request.user)
@@ -66,7 +67,7 @@ def profile_edit(request, pk):
                   {"form": form, "title": f"Sửa hồ sơ: {obj.full_name}"})
 
 
-@login_required
+@patient_required
 def profile_delete(request, pk):
     obj = get_object_or_404(PatientProfile, pk=pk, owner=request.user)
     if obj.relationship == PatientProfile.Relationship.SELF:

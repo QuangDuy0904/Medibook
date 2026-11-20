@@ -1,0 +1,72 @@
+{% extends "base.html" %}
+{% block title %}Thống kê{% endblock %}
+{% block content %}
+<h3>Báo cáo và thống kê</h3>
+
+<form method="get" class="card card-body mb-3">
+  <div class="row g-2">
+    <div class="col-6 col-md-3">
+      <label class="form-label small mb-0">Từ ngày</label>
+      <input type="date" name="from" value="{{ f.start|date:'Y-m-d' }}" class="form-control">
+    </div>
+    <div class="col-6 col-md-3">
+      <label class="form-label small mb-0">Đến ngày</label>
+      <input type="date" name="to" value="{{ f.end|date:'Y-m-d' }}" class="form-control">
+    </div>
+    <div class="col-12 col-md-3">
+      <label class="form-label small mb-0">Thống kê</label>
+      <select name="period" class="form-select">
+        {% for val, label in periods %}
+        <option value="{{ val }}" {% if val == f.period %}selected{% endif %}>{{ label }}</option>
+        {% endfor %}
+      </select>
+    </div>
+    <div class="col-12 col-md-3">
+      <label class="form-label small mb-0">Chuyên khoa</label>
+      <select name="specialty" class="form-select">
+        <option value="">Tất cả</option>
+        {% for s in specialties %}
+        <option value="{{ s.pk }}" {% if s.pk == f.specialty %}selected{% endif %}>{{ s.name }}</option>
+        {% endfor %}
+      </select>
+    </div>
+    <div class="col-12 col-md-6">
+      <label class="form-label small mb-0">Bác sĩ</label>
+      <select name="doctor" class="form-select">
+        <option value="">Tất cả</option>
+        {% for d in doctors %}
+        <option value="{{ d.pk }}" {% if d.pk == f.doctor %}selected{% endif %}>{{ d }}</option>
+        {% endfor %}
+      </select>
+    </div>
+    <div class="col-12 col-md-6 d-flex align-items-end gap-2">
+      <button class="btn btn-primary flex-fill">Xem báo cáo</button>
+      <a class="btn btn-outline-secondary" href="{% url 'analytics:dashboard' %}">Đặt lại</a>
+    </div>
+  </div>
+</form>
+
+<div class="row g-2 mb-2">
+  <div class="col-6 col-md-3"><div class="card card-body text-center">
+    <div class="text-muted small">Tổng cuộc hẹn</div><div class="fs-3 fw-bold">{{ report.summary.total }}</div></div></div>
+  <div class="col-6 col-md-3"><div class="card card-body text-center">
+    <div class="text-muted small">Hoàn thành</div><div class="fs-3 fw-bold text-success">{{ report.summary.completed }}</div></div></div>
+  <div class="col-6 col-md-3"><div class="card card-body text-center">
+    <div class="text-muted small">Đã hủy</div><div class="fs-3 fw-bold text-secondary">{{ report.summary.cancelled }}</div></div></div>
+  <div class="col-6 col-md-3"><div class="card card-body text-center">
+    <div class="text-muted small">Vắng mặt</div><div class="fs-3 fw-bold text-danger">{{ report.summary.no_show }}</div></div></div>
+</div>
+<div class="row g-2 mb-1">
+  <div class="col-12 col-md-6"><div class="card card-body text-center">
+    <div class="text-muted small">Tỷ lệ vắng mặt</div>
+    <div class="fs-3 fw-bold text-danger">{% if report.summary.rate is None %}—{% else %}{{ report.summary.rate }}%{% endif %}</div>
+    <div class="small text-muted">Vắng ÷ (đã đến + vắng). Lịch đã hủy và chưa diễn ra không tính.</div></div></div>
+  <div class="col-12 col-md-6"><div class="card card-body text-center">
+    <div class="text-muted small">Nguồn đặt lịch</div>
+    <div class="fs-5">Trực tuyến: <strong>{{ report.summary.online }}</strong> · Tại quầy: <strong>{{ report.summary.reception }}</strong></div></div></div>
+</div>
+
+{% include "analytics/_table.html" with rows=report.by_period title="Theo thời gian" first="Kỳ" %}
+{% include "analytics/_table.html" with rows=report.by_specialty title="Theo chuyên khoa" first="Chuyên khoa" %}
+{% include "analytics/_table.html" with rows=report.by_doctor title="Theo bác sĩ" first="Bác sĩ" %}
+{% endblock %}
