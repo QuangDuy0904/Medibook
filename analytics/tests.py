@@ -1,4 +1,5 @@
 from datetime import timedelta
+import csv, io
 
 from django.test import TestCase
 from django.urls import reverse
@@ -129,3 +130,40 @@ class DashboardViewTests(ReportBase):
     def test_patient_forbidden(self):
         self.client.force_login(self.u1)
         self.assertEqual(self.client.get(reverse("analytics:dashboard")).status_code, 403)
+
+class ExportTests(ReportBase):
+    def rows(self, **extra):
+        self.client.force_login(self.admin)
+        r = self.client.get(reverse("analytics:export"), {**self.params, **extra})
+        self.assertEqual(r.status_code, 200)
+        text = r.content.decode("utf-8-sig")
+        return r, list(csv.reader(io.StringIO(text)))
+
+    def test_admin_downloads_csv(self):
+        self.appt(-10, S.COMPLETED)
+        self.appt(-20, S.NO_SHOW)
+        r, rows = self.rows()
+        self.assertTrue(r["Content-Type"].startswith("text/csv"))
+        self.assertIn("attachment", r["Content-Disposition"])
+        self.assertTrue(r.content.startswith(b"\xef\xbb\xbf"))  # có BOM cho Excel
+        self.assertIn(["Tổng số cuộc hẹn", "2"], rows)
+        self.assertIn(["Vắng mặt", "1"], rows)
+
+    def test_export_respects_filters(self):
+        other = self.second_doctor()
+        self.appt(-10, S.COMPLETED)
+        self.appt(-20, S.COMPLETED, doctor=other)
+        _r, rows = self.rows(doctor=other.pk)
+        self.assertIn(["Tổng số cuộc hẹn", "1"], rows)
+
+    def test_formula_in_label_is_neutralised(self):
+        other = self.second_doctor("=HYPERLINK(\"http://x\")")
+        self.appt(-10, S.COMPLETED, doctor=other)
+        _r, rows = self.rows()
+        cells = [c for row in rows for c in row]
+        self.assertFalse(any(c.startswith("=") for c in cells))
+        self.assertTrue(any(c.startswith("'=") for c in cells))
+
+    def test_patient_forbidden(self):
+        self.client.force_login(self.u1)
+        self.assertEqual(self.client.get(reverse("analytics:export")).status_code, 403)

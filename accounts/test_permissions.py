@@ -6,7 +6,7 @@ from clinics.models import DoctorProfile, Specialty
 from .models import User
 
 ROLES = ["PATIENT", "DOCTOR", "RECEPTIONIST", "ADMIN"]
-ANALYTICS_PAGES = [("analytics:dashboard", [])]
+ANALYTICS_PAGES = [("analytics:dashboard", []), ("analytics:export", [])]
 
 # (tên url, tham số), id 1 không tồn tại: vai trò đúng thì 404, sai vai trò thì 403
 PATIENT_PAGES = [
@@ -87,7 +87,7 @@ class RoleMatrixTests(PermissionBase):
         root = User.objects.create_superuser(username="root", password="x12345!")
         self.client.force_login(root)
         for name in ("reception:dashboard", "doctor:dashboard",
-                     "accounts:profiles", "records:history"):
+                     "accounts:profiles", "records:history", "analytics:export"):
             with self.subTest(page=name):
                 self.assertEqual(self.client.get(reverse(name)).status_code, 200)
 
