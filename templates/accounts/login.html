@@ -1,9 +1,23 @@
 {% extends "base.html" %}
+{% block title %}Đăng nhập — Medibook{% endblock %}
+
 {% block content %}
-<h3>Đăng nhập</h3>
-<form method="post" class="card card-body">{% csrf_token %}
-  {{ form.as_p }}
-  <button class="btn btn-primary">Đăng nhập</button>
-  <a class="mt-2" href="{% url 'accounts:register' %}">Chưa có tài khoản? Đăng ký</a>
-</form>
+<div class="auth-wrapper">
+  <div class="text-center mb-4">
+    <h3 class="fw-bold mb-1">Đăng nhập</h3>
+    <p class="text-muted small">Chào mừng bạn quay lại hệ thống đặt lịch khám Medibook</p>
+  </div>
+
+  <div class="card p-4">
+    <form method="post">
+      {% csrf_token %}
+      {{ form.as_p }}
+      <button type="submit" class="btn btn-primary w-100 py-2 mt-2 fw-semibold">Đăng nhập</button>
+    </form>
+
+    <div class="text-center mt-3 pt-3 border-top small">
+      Chưa có tài khoản? <a href="{% url 'accounts:register' %}" class="fw-semibold">Đăng ký ngay</a>
+    </div>
+  </div>
+</div>
 {% endblock %}

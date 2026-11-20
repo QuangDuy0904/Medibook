@@ -1,69 +1,141 @@
 {% extends "base.html" %}
-{% block title %}Lịch làm việc{% endblock %}
+{% block title %}Lịch làm việc — Medibook{% endblock %}
+
 {% block content %}
-<a href="{% url 'doctor:dashboard' %}" class="small">← Khu vực bác sĩ</a>
-<h3 class="mt-2">Lịch làm việc của {{ doctor }}</h3>
+<div class="mb-3">
+  <a href="{% url 'doctor:dashboard' %}" class="small fw-semibold d-inline-flex align-items-center gap-1">
+    <i class="bi bi-arrow-left"></i> Quay lại Khu vực bác sĩ
+  </a>
+</div>
 
-<div class="row g-3 mb-4">
+<div class="page-header">
+  <div>
+    <h3><i class="bi bi-calendar-week me-2"></i>Lịch làm việc & Báo nghỉ</h3>
+    <p>{{ doctor }} · Quản lý ca khám định kỳ và đăng ký nghỉ đột xuất</p>
+  </div>
+</div>
+
+<div class="row g-4 mb-4">
   <div class="col-md-6">
-    <form method="post" action="{% url 'doctor_schedule:add' %}" class="card card-body h-100">{% csrf_token %}
-      <h5>Thêm ca làm việc</h5>
-      {{ schedule_form.as_p }}
-      <button class="btn btn-primary">Tạo ca và sinh khung giờ</button>
+    <form method="post" action="{% url 'doctor_schedule:add' %}" class="card p-4 h-100">
+      {% csrf_token %}
+      <div class="d-flex align-items-center gap-2 mb-3">
+        <div class="icon-box" style="width: 38px; height: 38px;">
+          <i class="bi bi-plus-circle-fill"></i>
+        </div>
+        <h5 class="fw-bold mb-0">Thêm ca làm việc</h5>
+      </div>
+      <div class="schedule-form-fields">
+        {{ schedule_form.as_p }}
+      </div>
+      <button class="btn btn-primary w-100 mt-auto py-2">
+        <i class="bi bi-magic me-1"></i> Tạo ca và sinh khung giờ
+      </button>
     </form>
   </div>
+
   <div class="col-md-6">
-    <form method="post" action="{% url 'doctor_schedule:off_add' %}" class="card card-body h-100">{% csrf_token %}
-      <h5>Báo nghỉ, báo bận</h5>
-      {{ off_form.as_p }}
-      <div class="alert alert-warning small">
-        Các lịch hẹn <strong>Đã xác nhận</strong> trong thời gian nghỉ sẽ bị hủy.
+    <form method="post" action="{% url 'doctor_schedule:off_add' %}" class="card p-4 h-100">
+      {% csrf_token %}
+      <div class="d-flex align-items-center gap-2 mb-3">
+        <div class="icon-box" style="width: 38px; height: 38px; background-color: #fef3c7; color: #b45309;">
+          <i class="bi bi-calendar-x-fill"></i>
+        </div>
+        <h5 class="fw-bold mb-0">Báo nghỉ, báo bận</h5>
       </div>
-      <button class="btn btn-warning">Báo nghỉ</button>
+      <div class="schedule-form-fields">
+        {{ off_form.as_p }}
+      </div>
+      <div class="alert alert-warning border-0 small py-2 d-flex align-items-start gap-2">
+        <i class="bi bi-exclamation-circle-fill mt-1"></i>
+        <div>Các lịch hẹn <strong>Đã xác nhận</strong> trong thời gian nghỉ sẽ tự động hủy và gửi email thông báo cho bệnh nhân.</div>
+      </div>
+      <button class="btn btn-warning w-100 mt-auto py-2 fw-semibold">
+        <i class="bi bi-send-exclamation me-1"></i> Xác nhận báo nghỉ
+      </button>
     </form>
   </div>
 </div>
 
-<h5>Ca làm việc sắp tới</h5>
-{% for s in schedules %}
-<div class="card card-body mb-2">
-  <div class="d-flex justify-content-between align-items-center">
-    <div>
-      <strong>{{ s.date|date:"l d/m/Y" }}</strong>
-      <span class="badge text-bg-info">{{ s.get_shift_display }}</span>
-      <div class="small text-muted">
-        {{ s.start_time|time:"H:i" }} đến {{ s.end_time|time:"H:i" }}
-        · {{ s.slot_minutes }} phút/khung · {{ s.n_slots }} khung giờ · {{ s.n_booked }} đã có lịch
+<h5 class="fw-bold mb-3">
+  <i class="bi bi-clock-history text-primary me-2"></i>Ca làm việc sắp tới
+</h5>
+<div class="d-flex flex-column gap-2 mb-4">
+  {% for s in schedules %}
+  <div class="card card-hover p-3">
+    <div class="d-flex justify-content-between align-items-center flex-wrap gap-2">
+      <div class="d-flex align-items-center gap-3">
+        <div class="icon-box">
+          <i class="bi bi-calendar-check"></i>
+        </div>
+        <div>
+          <div class="d-flex align-items-center gap-2 flex-wrap mb-1">
+            <strong class="text-dark">{{ s.date|date:"l, d/m/Y" }}</strong>
+            <span class="badge-specialty small">{{ s.get_shift_display }}</span>
+          </div>
+          <div class="small text-muted">
+            <i class="bi bi-clock me-1"></i>{{ s.start_time|time:"H:i" }} – {{ s.end_time|time:"H:i" }}
+            · {{ s.slot_minutes }} phút/khung
+            · <strong>{{ s.n_slots }}</strong> khung giờ
+            · <span class="text-primary fw-semibold">{{ s.n_booked }} đã có lịch</span>
+          </div>
+        </div>
       </div>
-    </div>
-    {% if s.n_booked == 0 %}
-    <form method="post" action="{% url 'doctor_schedule:delete' s.pk %}"
-          onsubmit="return confirm('Xóa ca làm việc này?')">{% csrf_token %}
-      <button class="btn btn-outline-danger btn-sm">Xóa</button>
-    </form>
-    {% endif %}
-  </div>
-</div>
-{% empty %}
-<div class="alert alert-light border">Bạn chưa có ca làm việc nào sắp tới.</div>
-{% endfor %}
 
-<h5 class="mt-4">Ngày nghỉ sắp tới</h5>
-{% for o in days_off %}
-<div class="card card-body mb-2">
-  <div class="d-flex justify-content-between align-items-center">
-    <div>
-      <strong>{{ o.date|date:"l d/m/Y" }}</strong>
-      <span class="badge text-bg-warning">{{ o.get_shift_display|default:"Cả ngày" }}</span>
-      {% if o.reason %}<div class="small text-muted">{{ o.reason }}</div>{% endif %}
+      {% if s.n_booked == 0 %}
+      <form method="post" action="{% url 'doctor_schedule:delete' s.pk %}"
+            onsubmit="return confirm('Xóa ca làm việc này?')" class="m-0">
+        {% csrf_token %}
+        <button class="btn btn-outline-danger btn-sm px-3">
+          <i class="bi bi-trash me-1"></i> Xóa
+        </button>
+      </form>
+      {% endif %}
     </div>
-    <form method="post" action="{% url 'doctor_schedule:off_delete' o.pk %}"
-          onsubmit="return confirm('Bỏ báo nghỉ này? Lịch hẹn đã bị hủy sẽ không tự khôi phục.')">{% csrf_token %}
-      <button class="btn btn-outline-secondary btn-sm">Bỏ báo nghỉ</button>
-    </form>
   </div>
+  {% empty %}
+  <div class="empty-state py-4">
+    <i class="bi bi-calendar-plus"></i>
+    <div class="fw-semibold text-dark">Bạn chưa có ca làm việc nào sắp tới</div>
+    <div class="small">Sử dụng biểu mẫu "Thêm ca làm việc" bên trên để mở khung giờ khám.</div>
+  </div>
+  {% endfor %}
 </div>
-{% empty %}
-<div class="alert alert-light border">Chưa có ngày nghỉ nào sắp tới.</div>
-{% endfor %}
+
+<h5 class="fw-bold mb-3">
+  <i class="bi bi-slash-circle text-warning me-2"></i>Ngày nghỉ sắp tới
+</h5>
+<div class="d-flex flex-column gap-2">
+  {% for o in days_off %}
+  <div class="card p-3">
+    <div class="d-flex justify-content-between align-items-center flex-wrap gap-2">
+      <div class="d-flex align-items-center gap-3">
+        <div class="icon-box" style="background-color: #fef3c7; color: #b45309;">
+          <i class="bi bi-calendar-minus"></i>
+        </div>
+        <div>
+          <div class="d-flex align-items-center gap-2 flex-wrap mb-1">
+            <strong class="text-dark">{{ o.date|date:"l, d/m/Y" }}</strong>
+            <span class="badge bg-warning-subtle text-warning-emphasis border border-warning-subtle rounded-pill px-2 py-1">
+              {{ o.get_shift_display|default:"Cả ngày" }}
+            </span>
+          </div>
+          {% if o.reason %}<div class="small text-muted">Lý do: {{ o.reason }}</div>{% endif %}
+        </div>
+      </div>
+
+      <form method="post" action="{% url 'doctor_schedule:off_delete' o.pk %}"
+            onsubmit="return confirm('Bỏ báo nghỉ này? Lịch hẹn đã bị hủy sẽ không tự khôi phục.')" class="m-0">
+        {% csrf_token %}
+        <button class="btn btn-outline-secondary btn-sm px-3">Bỏ báo nghỉ</button>
+      </form>
+    </div>
+  </div>
+  {% empty %}
+  <div class="empty-state py-4">
+    <i class="bi bi-emoji-smile"></i>
+    <div class="fw-semibold text-dark">Chưa có ngày nghỉ nào sắp tới</div>
+  </div>
+  {% endfor %}
+</div>
 {% endblock %}

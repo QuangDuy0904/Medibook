@@ -1,11 +1,21 @@
 {% extends "base.html" %}
-{% block title %}Tìm bác sĩ{% endblock %}
+{% block title %}Tìm bác sĩ — Medibook{% endblock %}
+
 {% block content %}
-<h3>Tìm bác sĩ</h3>
-<form method="get" class="card card-body mb-3">
-  <div class="row g-2">
+<div class="page-header">
+  <div>
+    <h3><i class="bi bi-search-heart me-2"></i>Tìm bác sĩ & Đặt lịch khám</h3>
+    <p>Chọn chuyên khoa, bác sĩ và khung giờ phù hợp — thanh toán trực tiếp tại quầy</p>
+  </div>
+</div>
+
+<div class="card p-3 p-md-4 mb-4">
+  <form method="get" class="row g-2">
     <div class="col-12 col-md-6">
-      <input name="q" value="{{ q }}" class="form-control" placeholder="Tên bác sĩ">
+      <div class="input-group">
+        <span class="input-group-text bg-white text-muted"><i class="bi bi-search"></i></span>
+        <input name="q" value="{{ q }}" class="form-control" placeholder="Nhập tên bác sĩ...">
+      </div>
     </div>
     <div class="col-12 col-md-6">
       <select name="specialty" class="form-select">
@@ -27,27 +37,46 @@
       </select>
     </div>
     <div class="col-12 col-md-4 d-flex gap-2">
-      <button class="btn btn-primary flex-fill">Tìm</button>
+      <button class="btn btn-primary flex-fill">
+        <i class="bi bi-funnel me-1"></i> Tìm kiếm
+      </button>
       <a class="btn btn-outline-secondary" href="{% url 'clinics:doctor_list' %}">Xóa lọc</a>
     </div>
-  </div>
-</form>
-
-{% for d in doctors %}
-<div class="card card-body mb-2">
-  <div class="d-flex justify-content-between align-items-start gap-2">
-    <div>
-      <strong>{{ d }}</strong>
-      <span class="badge text-bg-info">{{ d.specialty }}</span>
-      <div class="small text-muted">
-        {{ d.years_experience }} năm kinh nghiệm · Phí khám: {{ d.fee_display }}
-      </div>
-    </div>
-    <a class="btn btn-primary btn-sm text-nowrap"
-       href="{% url 'clinics:doctor_detail' d.pk %}{% if date %}?date={{ date }}{% endif %}">Xem lịch trống</a>
-  </div>
+  </form>
 </div>
-{% empty %}
-<div class="alert alert-warning">Không tìm thấy bác sĩ phù hợp.</div>
-{% endfor %}
+
+<div class="d-flex flex-column gap-3">
+  {% for d in doctors %}
+  <div class="card card-hover p-3 p-md-4">
+    <div class="d-flex justify-content-between align-items-center flex-wrap gap-3">
+      <div class="d-flex align-items-start gap-3">
+        <div class="icon-box" style="width: 52px; height: 52px; font-size: 1.45rem;">
+          <i class="bi bi-person-badge-fill"></i>
+        </div>
+        <div>
+          <div class="d-flex align-items-center gap-2 flex-wrap mb-1">
+            <strong class="fs-5 text-dark">{{ d }}</strong>
+            <span class="badge-specialty small">{{ d.specialty }}</span>
+          </div>
+          <div class="small text-muted d-flex flex-wrap gap-3 mt-1">
+            <span><i class="bi bi-award text-primary me-1"></i>{{ d.years_experience }} năm kinh nghiệm</span>
+            <span><i class="bi bi-cash-coin text-primary me-1"></i>Phí khám: <strong class="text-dark">{{ d.fee_display }}</strong></span>
+          </div>
+        </div>
+      </div>
+
+      <a class="btn btn-primary px-3 py-2 text-nowrap"
+         href="{% url 'clinics:doctor_detail' d.pk %}{% if date %}?date={{ date }}{% endif %}">
+        <i class="bi bi-calendar-check me-1"></i> Xem lịch trống
+      </a>
+    </div>
+  </div>
+  {% empty %}
+  <div class="empty-state">
+    <i class="bi bi-person-exclamation"></i>
+    <div class="fw-semibold text-dark">Không tìm thấy bác sĩ phù hợp</div>
+    <div class="small">Thử đổi từ khóa, chọn chuyên khoa khác hoặc bấm "Xóa lọc" để xem toàn bộ danh sách.</div>
+  </div>
+  {% endfor %}
+</div>
 {% endblock %}

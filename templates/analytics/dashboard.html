@@ -1,20 +1,29 @@
 {% extends "base.html" %}
-{% block title %}Thống kê{% endblock %}
-{% block content %}
-<h3>Báo cáo và thống kê</h3>
+{% block title %}Báo cáo & Thống kê — Medibook{% endblock %}
 
-<form method="get" class="card card-body mb-3">
-  <div class="row g-2">
+{% block content %}
+<div class="page-header">
+  <div>
+    <h3><i class="bi bi-bar-chart-line-fill me-2"></i>Báo cáo và thống kê</h3>
+    <p>Theo dõi hiệu suất khám bệnh, tỷ lệ vắng mặt (No-show) và nguồn đặt lịch</p>
+  </div>
+  <a class="btn btn-light-teal px-3 py-2" href="{% url 'analytics:export' %}?{{ request.GET.urlencode }}">
+    <i class="bi bi-file-earmark-spreadsheet-fill me-1"></i> Xuất file CSV
+  </a>
+</div>
+
+<div class="card p-3 p-md-4 mb-4">
+  <form method="get" class="row g-3">
     <div class="col-6 col-md-3">
-      <label class="form-label small mb-0">Từ ngày</label>
+      <label class="form-label small fw-semibold text-muted mb-1">Từ ngày</label>
       <input type="date" name="from" value="{{ f.start|date:'Y-m-d' }}" class="form-control">
     </div>
     <div class="col-6 col-md-3">
-      <label class="form-label small mb-0">Đến ngày</label>
+      <label class="form-label small fw-semibold text-muted mb-1">Đến ngày</label>
       <input type="date" name="to" value="{{ f.end|date:'Y-m-d' }}" class="form-control">
     </div>
     <div class="col-12 col-md-3">
-      <label class="form-label small mb-0">Thống kê</label>
+      <label class="form-label small fw-semibold text-muted mb-1">Thống kê theo</label>
       <select name="period" class="form-select">
         {% for val, label in periods %}
         <option value="{{ val }}" {% if val == f.period %}selected{% endif %}>{{ label }}</option>
@@ -22,52 +31,135 @@
       </select>
     </div>
     <div class="col-12 col-md-3">
-      <label class="form-label small mb-0">Chuyên khoa</label>
+      <label class="form-label small fw-semibold text-muted mb-1">Chuyên khoa</label>
       <select name="specialty" class="form-select">
-        <option value="">Tất cả</option>
+        <option value="">Tất cả chuyên khoa</option>
         {% for s in specialties %}
         <option value="{{ s.pk }}" {% if s.pk == f.specialty %}selected{% endif %}>{{ s.name }}</option>
         {% endfor %}
       </select>
     </div>
     <div class="col-12 col-md-6">
-      <label class="form-label small mb-0">Bác sĩ</label>
+      <label class="form-label small fw-semibold text-muted mb-1">Bác sĩ</label>
       <select name="doctor" class="form-select">
-        <option value="">Tất cả</option>
+        <option value="">Tất cả bác sĩ</option>
         {% for d in doctors %}
         <option value="{{ d.pk }}" {% if d.pk == f.doctor %}selected{% endif %}>{{ d }}</option>
         {% endfor %}
       </select>
     </div>
-     <div class="col-12 col-md-6 d-flex align-items-end gap-2">
-      <button class="btn btn-primary flex-fill">Xem báo cáo</button>
-      <a class="btn btn-outline-secondary" href="{% url 'analytics:dashboard' %}">Đặt lại</a>
-      <a class="btn btn-outline-success" href="{% url 'analytics:export' %}?{{ request.GET.urlencode }}">Tải CSV</a>
+    <div class="col-12 col-md-6 d-flex align-items-end gap-2">
+      <button class="btn btn-primary flex-fill py-2">
+        <i class="bi bi-graph-up me-1"></i> Xem báo cáo
+      </button>
+      <a class="btn btn-outline-secondary py-2 px-3" href="{% url 'analytics:dashboard' %}">Đặt lại</a>
+    </div>
+  </form>
+</div>
+
+<!-- Hàng KPI 1: 4 thẻ số liệu chính -->
+<div class="row g-3 mb-3">
+  <div class="col-6 col-md-3">
+    <div class="card kpi-card p-3 h-100">
+      <div class="d-flex justify-content-between align-items-start">
+        <div>
+          <div class="text-muted small fw-medium">Tổng cuộc hẹn</div>
+          <div class="fs-2 fw-bold text-dark mt-1">{{ report.summary.total }}</div>
+        </div>
+        <div class="icon-box" style="width: 38px; height: 38px;"><i class="bi bi-calendar2-check"></i></div>
+      </div>
     </div>
   </div>
-</form>
 
-<div class="row g-2 mb-2">
-  <div class="col-6 col-md-3"><div class="card card-body text-center">
-    <div class="text-muted small">Tổng cuộc hẹn</div><div class="fs-3 fw-bold">{{ report.summary.total }}</div></div></div>
-  <div class="col-6 col-md-3"><div class="card card-body text-center">
-    <div class="text-muted small">Hoàn thành</div><div class="fs-3 fw-bold text-success">{{ report.summary.completed }}</div></div></div>
-  <div class="col-6 col-md-3"><div class="card card-body text-center">
-    <div class="text-muted small">Đã hủy</div><div class="fs-3 fw-bold text-secondary">{{ report.summary.cancelled }}</div></div></div>
-  <div class="col-6 col-md-3"><div class="card card-body text-center">
-    <div class="text-muted small">Vắng mặt</div><div class="fs-3 fw-bold text-danger">{{ report.summary.no_show }}</div></div></div>
-</div>
-<div class="row g-2 mb-1">
-  <div class="col-12 col-md-6"><div class="card card-body text-center">
-    <div class="text-muted small">Tỷ lệ vắng mặt</div>
-    <div class="fs-3 fw-bold text-danger">{% if report.summary.rate is None %}—{% else %}{{ report.summary.rate }}%{% endif %}</div>
-    <div class="small text-muted">Vắng ÷ (đã đến + vắng). Lịch đã hủy và chưa diễn ra không tính.</div></div></div>
-  <div class="col-12 col-md-6"><div class="card card-body text-center">
-    <div class="text-muted small">Nguồn đặt lịch</div>
-    <div class="fs-5">Trực tuyến: <strong>{{ report.summary.online }}</strong> · Tại quầy: <strong>{{ report.summary.reception }}</strong></div></div></div>
+  <div class="col-6 col-md-3">
+    <div class="card kpi-card kpi-success p-3 h-100">
+      <div class="d-flex justify-content-between align-items-start">
+        <div>
+          <div class="text-muted small fw-medium">Hoàn thành</div>
+          <div class="fs-2 fw-bold text-success mt-1">{{ report.summary.completed }}</div>
+        </div>
+        <div class="icon-box" style="width: 38px; height: 38px; background-color: #dcfce7; color: #16a34a;">
+          <i class="bi bi-check-circle-fill"></i>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="col-6 col-md-3">
+    <div class="card kpi-card kpi-muted p-3 h-100">
+      <div class="d-flex justify-content-between align-items-start">
+        <div>
+          <div class="text-muted small fw-medium">Đã hủy</div>
+          <div class="fs-2 fw-bold text-secondary mt-1">{{ report.summary.cancelled }}</div>
+        </div>
+        <div class="icon-box" style="width: 38px; height: 38px; background-color: #f1f5f9; color: #64748b;">
+          <i class="bi bi-x-circle-fill"></i>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="col-6 col-md-3">
+    <div class="card kpi-card kpi-danger p-3 h-100">
+      <div class="d-flex justify-content-between align-items-start">
+        <div>
+          <div class="text-muted small fw-medium">Vắng mặt</div>
+          <div class="fs-2 fw-bold text-danger mt-1">{{ report.summary.no_show }}</div>
+        </div>
+        <div class="icon-box" style="width: 38px; height: 38px; background-color: #fee2e2; color: #dc2626;">
+          <i class="bi bi-person-x-fill"></i>
+        </div>
+      </div>
+    </div>
+  </div>
 </div>
 
-{% include "analytics/_table.html" with rows=report.by_period title="Theo thời gian" first="Kỳ" %}
-{% include "analytics/_table.html" with rows=report.by_specialty title="Theo chuyên khoa" first="Chuyên khoa" %}
-{% include "analytics/_table.html" with rows=report.by_doctor title="Theo bác sĩ" first="Bác sĩ" %}
+<!-- Hàng KPI 2: Tỷ lệ No-show & Nguồn đặt lịch -->
+<div class="row g-3 mb-4">
+  <div class="col-12 col-md-6">
+    <div class="card kpi-card kpi-danger p-3 p-md-4 h-100">
+      <div class="d-flex align-items-center gap-3">
+        <div class="icon-box" style="width: 52px; height: 52px; background-color: #fee2e2; color: #dc2626; font-size: 1.5rem;">
+          <i class="bi bi-exclamation-diamond-fill"></i>
+        </div>
+        <div>
+          <div class="text-muted small fw-semibold text-uppercase">Tỷ lệ vắng mặt (No-show)</div>
+          <div class="fs-2 fw-bold text-danger">
+            {% if report.summary.rate is None %}—{% else %}{{ report.summary.rate }}%{% endif %}
+          </div>
+          <div class="small text-muted">Vắng ÷ (đã đến + vắng). Lịch đã hủy và chưa diễn ra không tính.</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="col-12 col-md-6">
+    <div class="card kpi-card p-3 p-md-4 h-100">
+      <div class="d-flex align-items-center gap-3">
+        <div class="icon-box" style="width: 52px; height: 52px; font-size: 1.5rem;">
+          <i class="bi bi-diagram-3-fill"></i>
+        </div>
+        <div class="w-100">
+          <div class="text-muted small fw-semibold text-uppercase mb-2">Nguồn đặt lịch</div>
+          <div class="d-flex gap-4">
+            <div>
+              <span class="small text-muted d-block">Trực tuyến (Web)</span>
+              <strong class="fs-3 text-primary">{{ report.summary.online }}</strong>
+            </div>
+            <div class="border-start ps-4">
+              <span class="small text-muted d-block">Tại quầy tiếp tân</span>
+              <strong class="fs-3 text-dark">{{ report.summary.reception }}</strong>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="d-flex flex-column gap-4">
+  {% include "analytics/_table.html" with rows=report.by_period title="Theo thời gian" first="Kỳ" %}
+  {% include "analytics/_table.html" with rows=report.by_specialty title="Theo chuyên khoa" first="Chuyên khoa" %}
+  {% include "analytics/_table.html" with rows=report.by_doctor title="Theo bác sĩ" first="Bác sĩ" %}
+</div>
 {% endblock %}

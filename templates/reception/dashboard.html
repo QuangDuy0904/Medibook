@@ -1,62 +1,118 @@
 {% extends "base.html" %}
-{% block title %}Quầy tiếp tân{% endblock %}
+{% block title %}Quầy tiếp tân — Medibook{% endblock %}
+
 {% block content %}
-<div class="d-flex justify-content-between align-items-center mb-3">
-  <h3 class="mb-0">Quầy tiếp tân</h3>
-  <a class="btn btn-primary btn-sm" href="{% url 'reception:walkin_pick' %}">+ Khách vãng lai</a>
+<div class="page-header">
+  <div>
+    <h3><i class="bi bi-hospital me-2"></i>Quầy tiếp tân</h3>
+    <p>Tiếp đón bệnh nhân, quét mã QR check-in và điều phối hàng đợi phòng khám</p>
+  </div>
+  <a class="btn btn-light-teal px-3 py-2" href="{% url 'reception:walkin_pick' %}">
+    <i class="bi bi-person-plus-fill me-1"></i> Khách vãng lai
+  </a>
 </div>
 
-<form method="post" action="{% url 'reception:checkin_lookup' %}" class="card card-body mb-3">{% csrf_token %}
-  <label class="form-label fw-bold">Check-in bằng mã hẹn</label>
+<form method="post" action="{% url 'reception:checkin_lookup' %}" class="card p-3 p-md-4 mb-4">
+  {% csrf_token %}
+  <div class="d-flex align-items-center gap-2 mb-2">
+    <div class="icon-box" style="width: 36px; height: 36px; font-size: 1.05rem;">
+      <i class="bi bi-qr-code-scan"></i>
+    </div>
+    <label class="form-label fw-bold mb-0">Check-in nhanh bằng mã hẹn</label>
+  </div>
   <div class="input-group">
-    <input name="code" class="form-control" autofocus autocomplete="off" required
+    <input name="code" class="form-control form-control-lg fs-6" autofocus autocomplete="off" required
            placeholder="Quét QR hoặc nhập mã, ví dụ APT-20261119-K7M2QX">
-    <button class="btn btn-success">Tìm lịch hẹn</button>
+    <button class="btn btn-primary px-4">
+      <i class="bi bi-search me-1"></i> Tìm lịch hẹn
+    </button>
   </div>
 </form>
 
-<form method="get" class="row g-2 mb-3">
-  <div class="col-6 col-md-3">
-    <input type="date" name="date" value="{{ day|date:'Y-m-d' }}" class="form-control">
-  </div>
-  <div class="col-6 col-md-4">
-    <select name="doctor" class="form-select">
-      <option value="">Tất cả bác sĩ</option>
-      {% for d in doctors %}
-      <option value="{{ d.pk }}" {% if d.pk|stringformat:"s" == doctor_id %}selected{% endif %}>{{ d }}</option>
-      {% endfor %}
-    </select>
-  </div>
-  <div class="col-6 col-md-3">
-    <select name="shift" class="form-select">
-      <option value="">Cả ngày</option>
-      {% for val, label in shift_choices %}
-      <option value="{{ val }}" {% if val == shift %}selected{% endif %}>{{ label }}</option>
-      {% endfor %}
-    </select>
-  </div>
-  <div class="col-6 col-md-2"><button class="btn btn-outline-primary w-100">Lọc</button></div>
-</form>
+<div class="card p-3 mb-4">
+  <form method="get" class="row g-2 align-items-center">
+    <div class="col-6 col-md-3">
+      <input type="date" name="date" value="{{ day|date:'Y-m-d' }}" class="form-control">
+    </div>
+    <div class="col-6 col-md-4">
+      <select name="doctor" class="form-select">
+        <option value="">Tất cả bác sĩ</option>
+        {% for d in doctors %}
+        <option value="{{ d.pk }}" {% if d.pk|stringformat:"s" == doctor_id %}selected{% endif %}>{{ d }}</option>
+        {% endfor %}
+      </select>
+    </div>
+    <div class="col-6 col-md-3">
+      <select name="shift" class="form-select">
+        <option value="">Cả ngày</option>
+        {% for val, label in shift_choices %}
+        <option value="{{ val }}" {% if val == shift %}selected{% endif %}>{{ label }}</option>
+        {% endfor %}
+      </select>
+    </div>
+    <div class="col-6 col-md-2">
+      <button class="btn btn-outline-primary w-100">
+        <i class="bi bi-funnel me-1"></i> Lọc
+      </button>
+    </div>
+  </form>
+</div>
 
-<h5>Ngày {{ day|date:"d/m/Y" }}</h5>
+<div class="d-flex align-items-center justify-content-between mb-3">
+  <h5 class="fw-bold mb-0">
+    <i class="bi bi-calendar3 text-primary me-2"></i>Danh sách khám ngày {{ day|date:"d/m/Y" }}
+  </h5>
+</div>
+
 {% for g in groups %}
-<div class="card mb-3">
-  <div class="card-header d-flex justify-content-between">
-    <strong>{{ g.doctor }}</strong>
-    <span class="text-muted small">{{ g.doctor.specialty }}</span>
+<div class="card mb-4 overflow-hidden">
+  <div class="card-header bg-white py-3 d-flex justify-content-between align-items-center flex-wrap gap-2">
+    <div class="d-flex align-items-center gap-2">
+      <div class="icon-box" style="width: 38px; height: 38px; font-size: 1.1rem;">
+        <i class="bi bi-person-badge"></i>
+      </div>
+      <div>
+        <strong class="d-block text-dark">{{ g.doctor }}</strong>
+        <span class="badge-specialty small">{{ g.doctor.specialty }}</span>
+      </div>
+    </div>
   </div>
+
   <div class="card-body pt-2">
-    {% if g.consulting %}<h6 class="mt-2">Đang khám</h6>
-      {% for a in g.consulting %}{% include "reception/_row.html" %}{% endfor %}{% endif %}
-    {% if g.waiting %}<h6 class="mt-2">Chờ khám (theo số thứ tự)</h6>
-      {% for a in g.waiting %}{% include "reception/_row.html" %}{% endfor %}{% endif %}
-    {% if g.upcoming %}<h6 class="mt-2">Chưa đến</h6>
-      {% for a in g.upcoming %}{% include "reception/_row.html" %}{% endfor %}{% endif %}
-    {% if g.done %}<h6 class="mt-2">Đã xong / vắng mặt</h6>
-      {% for a in g.done %}{% include "reception/_row.html" %}{% endfor %}{% endif %}
+    {% if g.consulting %}
+      <div class="text-warning-emphasis fw-semibold small text-uppercase mt-2 mb-2">
+        <i class="bi bi-activity me-1"></i> Đang khám
+      </div>
+      {% for a in g.consulting %}{% include "reception/_row.html" %}{% endfor %}
+    {% endif %}
+
+    {% if g.waiting %}
+      <div class="text-primary fw-semibold small text-uppercase mt-3 mb-2">
+        <i class="bi bi-hourglass-split me-1"></i> Chờ khám (theo số thứ tự)
+      </div>
+      {% for a in g.waiting %}{% include "reception/_row.html" %}{% endfor %}
+    {% endif %}
+
+    {% if g.upcoming %}
+      <div class="text-teal fw-semibold small text-uppercase mt-3 mb-2" style="color: #0f766e;">
+        <i class="bi bi-clock me-1"></i> Chưa đến
+      </div>
+      {% for a in g.upcoming %}{% include "reception/_row.html" %}{% endfor %}
+    {% endif %}
+
+    {% if g.done %}
+      <div class="text-muted fw-semibold small text-uppercase mt-3 mb-2">
+        <i class="bi bi-check2-circle me-1"></i> Đã xong / vắng mặt
+      </div>
+      {% for a in g.done %}{% include "reception/_row.html" %}{% endfor %}
+    {% endif %}
   </div>
 </div>
 {% empty %}
-<div class="alert alert-light border">Không có lịch hẹn nào trong ngày này.</div>
+<div class="empty-state">
+  <i class="bi bi-calendar2-x"></i>
+  <div class="fw-semibold text-dark">Không có lịch hẹn nào trong ngày này</div>
+  <div class="small">Thử chọn ngày khám khác ở bộ lọc phía trên hoặc thêm bệnh nhân vãng lai.</div>
+</div>
 {% endfor %}
 {% endblock %}

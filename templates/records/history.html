@@ -1,22 +1,64 @@
 {% extends "base.html" %}
-{% block title %}Lịch sử khám{% endblock %}
+{% block title %}Lịch sử khám — Medibook{% endblock %}
+
 {% block content %}
-<h3>Lịch sử khám</h3>
-{% for v in visits %}
-<div class="card card-body mb-2">
+<div class="page-header">
   <div>
-    <strong>{{ v.slot.start_at|date:"d/m/Y" }}</strong> · {{ v.slot.doctor }}
-    <span class="badge text-bg-info">{{ v.slot.doctor.specialty }}</span>
+    <h3><i class="bi bi-journal-medical me-2"></i>Lịch sử khám bệnh</h3>
+    <p>Xem lại kết quả chẩn đoán sơ bộ và lời dặn của bác sĩ sau các lần khám hoàn thành</p>
   </div>
-  <div class="small text-muted">Người khám: {{ v.profile.full_name }} · Mã: {{ v.code }}</div>
-  {% if v.note %}
-  <div class="mt-2"><strong>Chẩn đoán sơ bộ:</strong> {{ v.note.diagnosis|linebreaksbr }}</div>
-  <div class="mt-1"><strong>Lời dặn:</strong> {{ v.note.advice|linebreaksbr|default:"—" }}</div>
-  {% else %}
-  <div class="mt-2 text-muted">Bác sĩ chưa ghi kết luận.</div>
-  {% endif %}
 </div>
-{% empty %}
-<div class="alert alert-light border">Bạn chưa có lần khám nào hoàn thành.</div>
-{% endfor %}
+
+<div class="d-flex flex-column gap-3">
+  {% for v in visits %}
+  <div class="card p-4" style="border-left: 4px solid #0d9488;">
+    <div class="d-flex justify-content-between align-items-start flex-wrap gap-2 pb-3 border-bottom">
+      <div class="d-flex align-items-center gap-3">
+        <div class="icon-box">
+          <i class="bi bi-clipboard2-pulse-fill"></i>
+        </div>
+        <div>
+          <div class="d-flex align-items-center gap-2 flex-wrap">
+            <strong class="fs-5 text-dark">{{ v.slot.start_at|date:"d/m/Y" }}</strong>
+            <span class="text-muted">·</span>
+            <strong class="text-dark">{{ v.slot.doctor }}</strong>
+            <span class="badge-specialty small">{{ v.slot.doctor.specialty }}</span>
+          </div>
+          <div class="small text-muted mt-1">
+            <i class="bi bi-person me-1"></i>Người khám: <strong>{{ v.profile.full_name }}</strong>
+            · <i class="bi bi-hash ms-1"></i>Mã hẹn: <code class="text-dark">{{ v.code }}</code>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    {% if v.note %}
+    <div class="row g-3 pt-3">
+      <div class="col-md-6">
+        <div class="p-3 rounded-3 h-100" style="background-color: #f8fafc;">
+          <div class="small fw-bold text-uppercase text-primary mb-1">Chẩn đoán sơ bộ</div>
+          <div class="text-dark">{{ v.note.diagnosis|linebreaksbr }}</div>
+        </div>
+      </div>
+      <div class="col-md-6">
+        <div class="p-3 rounded-3 h-100" style="background-color: #f0fdfa;">
+          <div class="small fw-bold text-uppercase text-primary mb-1">Lời dặn của bác sĩ</div>
+          <div class="text-dark">{{ v.note.advice|linebreaksbr|default:"—" }}</div>
+        </div>
+      </div>
+    </div>
+    {% else %}
+    <div class="pt-3 text-muted small fst-italic">
+      <i class="bi bi-info-circle me-1"></i>Bác sĩ chưa ghi kết luận cho lần khám này.
+    </div>
+    {% endif %}
+  </div>
+  {% empty %}
+  <div class="empty-state">
+    <i class="bi bi-journal-medical"></i>
+    <div class="fw-semibold text-dark">Bạn chưa có lần khám nào hoàn thành</div>
+    <div class="small">Sau khi hoàn tất buổi khám tại phòng khám, kết luận của bác sĩ sẽ hiển thị tại đây.</div>
+  </div>
+  {% endfor %}
+</div>
 {% endblock %}

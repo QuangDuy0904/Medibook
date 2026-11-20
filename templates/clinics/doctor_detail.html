@@ -1,38 +1,71 @@
 {% extends "base.html" %}
-{% block title %}{{ doctor }}{% endblock %}
+{% block title %}{{ doctor }} — Medibook{% endblock %}
+
 {% block content %}
-<a href="{% url 'clinics:doctor_list' %}" class="small">← Danh sách bác sĩ</a>
-<div class="card card-body my-3">
-  <h4 class="mb-1">{{ doctor }}</h4>
-  <div><span class="badge text-bg-info">{{ doctor.specialty }}</span></div>
-  <div class="text-muted mt-2">
-    {{ doctor.years_experience }} năm kinh nghiệm · Phí khám tham khảo: <strong>{{ doctor.fee_display }}</strong>
-  </div>
-  {% if doctor.bio %}<p class="mt-2 mb-0">{{ doctor.bio|linebreaksbr }}</p>{% endif %}
-</div>
-
-<h5>Chọn ngày khám</h5>
-<div class="d-flex gap-2 overflow-auto pb-2 mb-3">
-  {% for d in days %}
-  <a href="?date={{ d.date|date:'Y-m-d' }}"
-     class="btn btn-sm text-nowrap {% if d.date == selected %}btn-primary{% elif d.n %}btn-outline-primary{% else %}btn-outline-secondary disabled{% endif %}">
-    {{ d.date|date:"D d/m" }}<br><small>{% if d.n %}{{ d.n }} giờ trống{% else %}hết chỗ{% endif %}</small>
+<div class="mb-3">
+  <a href="{% url 'clinics:doctor_list' %}" class="small fw-semibold d-inline-flex align-items-center gap-1">
+    <i class="bi bi-arrow-left"></i> Quay lại danh sách bác sĩ
   </a>
-  {% endfor %}
 </div>
 
-<h5>Khung giờ ngày {{ selected|date:"d/m/Y" }}</h5>
-{% if slots %}
-<div class="d-flex flex-wrap gap-2">
-  {% for s in slots %}
-    {% if not user.is_authenticated or user.role == "PATIENT" %}
-    <a class="btn btn-outline-success" href="{% url 'appointments:book' s.pk %}">{{ s.start_at|time:"H:i" }}</a>
-    {% else %}
-    <span class="btn btn-outline-secondary disabled">{{ s.start_at|time:"H:i" }}</span>
-    {% endif %}
-  {% endfor %}
+<div class="card p-4 mb-4">
+  <div class="d-flex align-items-start gap-3 flex-wrap">
+    <div class="icon-box" style="width: 60px; height: 60px; font-size: 1.75rem;">
+      <i class="bi bi-person-badge-fill"></i>
+    </div>
+    <div class="flex-fill">
+      <div class="d-flex align-items-center gap-2 flex-wrap mb-1">
+        <h4 class="fw-bold mb-0 text-dark">{{ doctor }}</h4>
+        <span class="badge-specialty small">{{ doctor.specialty }}</span>
+      </div>
+      <div class="text-muted small d-flex flex-wrap gap-3 mt-2">
+        <span><i class="bi bi-award text-primary me-1"></i>{{ doctor.years_experience }} năm kinh nghiệm</span>
+        <span><i class="bi bi-cash-coin text-primary me-1"></i>Phí khám tham khảo: <strong class="text-dark">{{ doctor.fee_display }}</strong></span>
+      </div>
+      {% if doctor.bio %}
+      <div class="mt-3 pt-3 border-top text-secondary small" style="line-height: 1.6;">
+        {{ doctor.bio|linebreaksbr }}
+      </div>
+      {% endif %}
+    </div>
+  </div>
 </div>
-{% else %}
-<div class="alert alert-warning">Ngày này không còn khung giờ trống.</div>
-{% endif %}
+
+<div class="card p-4">
+  <h5 class="fw-bold mb-3">
+    <i class="bi bi-calendar3 text-primary me-2"></i>1. Chọn ngày khám
+  </h5>
+  <div class="d-flex gap-2 overflow-auto pb-2 mb-4">
+    {% for d in days %}
+    <a href="?date={{ d.date|date:'Y-m-d' }}"
+       class="btn text-nowrap px-3 py-2 {% if d.date == selected %}btn-primary{% elif d.n %}btn-outline-primary{% else %}btn-outline-secondary disabled{% endif %}">
+      <div class="fw-bold">{{ d.date|date:"D d/m" }}</div>
+      <small class="opacity-75">{% if d.n %}{{ d.n }} giờ trống{% else %}Hết chỗ{% endif %}</small>
+    </a>
+    {% endfor %}
+  </div>
+
+  <h5 class="fw-bold mb-3">
+    <i class="bi bi-clock text-primary me-2"></i>2. Chọn khung giờ ngày {{ selected|date:"d/m/Y" }}
+  </h5>
+  {% if slots %}
+  <div class="d-flex flex-wrap gap-2">
+    {% for s in slots %}
+      {% if not user.is_authenticated or user.role == "PATIENT" %}
+      <a class="slot-btn" href="{% url 'appointments:book' s.pk %}">
+        <i class="bi bi-clock me-1 text-primary"></i>{{ s.start_at|time:"H:i" }}
+      </a>
+      {% else %}
+      <span class="btn btn-outline-secondary disabled">{{ s.start_at|time:"H:i" }}</span>
+      {% endif %}
+    {% endfor %}
+  </div>
+  {% else %}
+  <div class="empty-state py-4">
+    <i class="bi bi-calendar-x"></i>
+    <div class="fw-semibold text-dark">Ngày này không còn khung giờ trống</div>
+    <div class="small">Bạn vui lòng chọn ngày khác ở thanh phía trên.</div>
+  </div>
+  {% endif %}
+</div>
 {% endblock %}

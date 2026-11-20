@@ -1,51 +1,101 @@
 {% extends "base.html" %}
-{% block title %}Lịch hẹn {{ appt.code }}{% endblock %}
+{% block title %}Lịch hẹn {{ appt.code }} — Medibook{% endblock %}
+
 {% block content %}
-<a href="{% url 'appointments:mine' %}" class="small">← Lịch hẹn của tôi</a>
-<div class="card card-body my-3">
-  <div class="row g-3">
+<div class="mb-3">
+  <a href="{% url 'appointments:mine' %}" class="small fw-semibold d-inline-flex align-items-center gap-1">
+    <i class="bi bi-arrow-left"></i> Quay lại Lịch hẹn của tôi
+  </a>
+</div>
+
+<div class="card p-4 mb-4">
+  <div class="row g-4 align-items-center">
     <div class="col-md-8">
-      <h4 class="mb-1">{{ appt.slot.doctor }}</h4>
-      <div><span class="badge text-bg-info">{{ appt.slot.doctor.specialty }}</span>
-        <span class="badge text-bg-secondary">{{ appt.get_status_display }}</span></div>
-      <div class="mt-2">
-        Thời gian: <strong>{{ appt.slot.start_at|time:"H:i" }}</strong>
-        ngày <strong>{{ appt.slot.start_at|date:"d/m/Y" }}</strong>
+      <div class="d-flex align-items-center gap-2 flex-wrap mb-2">
+        <span class="badge-specialty small">{{ appt.slot.doctor.specialty }}</span>
+        <span class="badge rounded-pill text-bg-{% if appt.status == 'CONFIRMED' %}primary{% elif appt.status == 'COMPLETED' %}success{% elif appt.status == 'CANCELLED' or appt.status == 'NO_SHOW' %}secondary{% else %}warning{% endif %}">
+          {{ appt.get_status_display }}
+        </span>
       </div>
-      <div>Người khám: {{ appt.profile.full_name }}</div>
-      <div>Triệu chứng: {{ appt.symptoms|default:"—" }}</div>
-      <div class="text-muted small">Phí khám tham khảo: {{ appt.slot.doctor.fee_display }} (thanh toán tại quầy)</div>
-      {% if appt.queue_number %}<div class="mt-2">Số thứ tự: <strong>{{ appt.queue_number }}</strong></div>{% endif %}
-    </div>
-    <div class="col-md-4 text-center">
-      {% if appt.status == "CONFIRMED" or appt.status == "CHECKED_IN" %}
-      <img src="{% url 'appointments:qr' appt.pk %}" alt="QR {{ appt.code }}" class="img-fluid" style="max-width:200px">
+
+      <h4 class="fw-bold text-dark mb-3">{{ appt.slot.doctor }}</h4>
+
+      <div class="d-flex flex-column gap-2 small">
+        <div>
+          <i class="bi bi-clock-fill text-primary me-2"></i>Thời gian khám:
+          <strong class="fs-6 text-dark">{{ appt.slot.start_at|time:"H:i" }}</strong>
+          ngày <strong class="text-dark">{{ appt.slot.start_at|date:"d/m/Y" }}</strong>
+        </div>
+        <div>
+          <i class="bi bi-person-vcard-fill text-primary me-2"></i>Người khám:
+          <strong class="text-dark">{{ appt.profile.full_name }}</strong>
+        </div>
+        <div>
+          <i class="bi bi-chat-left-text-fill text-primary me-2"></i>Triệu chứng:
+          <span>{{ appt.symptoms|default:"—" }}</span>
+        </div>
+        <div class="text-muted">
+          <i class="bi bi-cash-coin text-primary me-2"></i>Phí khám tham khảo:
+          <strong class="text-dark">{{ appt.slot.doctor.fee_display }}</strong> (thanh toán tại quầy)
+        </div>
+      </div>
+
+      {% if appt.queue_number %}
+      <div class="mt-3 p-2 px-3 rounded-3 d-inline-flex align-items-center gap-2" style="background-color: #f0fdfa; border: 1px solid #99f6e4;">
+        <span class="text-muted small">Số thứ tự phòng khám:</span>
+        <strong class="fs-4 text-primary">{{ appt.queue_number }}</strong>
+      </div>
       {% endif %}
-      <div class="fw-bold mt-1">{{ appt.code }}</div>
+    </div>
+
+    <div class="col-md-4 text-center border-start-md">
+      <div class="p-3 rounded-4 bg-light border d-inline-block">
+        {% if appt.status == "CONFIRMED" or appt.status == "CHECKED_IN" %}
+        <img src="{% url 'appointments:qr' appt.pk %}" alt="QR {{ appt.code }}" class="img-fluid rounded" style="max-width: 180px;">
+        <div class="small text-muted mt-2">Đưa mã này cho lễ tân khi đến</div>
+        {% endif %}
+        <div class="fw-bold text-primary mt-1">{{ appt.code }}</div>
+      </div>
     </div>
   </div>
 </div>
 
 {% if appt.note %}
-<div class="card card-body mb-3">
-  <h6>Kết luận của bác sĩ</h6>
-  <div><strong>Chẩn đoán sơ bộ:</strong> {{ appt.note.diagnosis|linebreaksbr }}</div>
-  <div class="mt-1"><strong>Lời dặn:</strong> {{ appt.note.advice|linebreaksbr|default:"—" }}</div>
+<div class="card p-4 mb-4" style="border-left: 4px solid #0d9488;">
+  <h6 class="fw-bold text-primary mb-3">
+    <i class="bi bi-file-medical-fill me-2"></i>Kết luận của bác sĩ
+  </h6>
+  <div class="mb-2">
+    <span class="fw-semibold text-dark">Chẩn đoán sơ bộ:</span>
+    <div class="text-secondary mt-1">{{ appt.note.diagnosis|linebreaksbr }}</div>
+  </div>
+  <div class="pt-2 border-top">
+    <span class="fw-semibold text-dark">Lời dặn & Hướng dẫn:</span>
+    <div class="text-secondary mt-1">{{ appt.note.advice|linebreaksbr|default:"—" }}</div>
+  </div>
 </div>
 {% endif %}
 
 {% if appt.can_change_online %}
-<div class="d-flex gap-2">
-  <a class="btn btn-outline-primary" href="{% url 'appointments:reschedule' appt.pk %}">Đổi giờ</a>
+<div class="d-flex gap-2 flex-wrap">
+  <a class="btn btn-outline-primary px-4" href="{% url 'appointments:reschedule' appt.pk %}">
+    <i class="bi bi-calendar2-week me-1"></i> Đổi giờ khám
+  </a>
   <form method="post" action="{% url 'appointments:cancel' appt.pk %}"
-        onsubmit="return confirm('Bạn chắc chắn muốn hủy lịch hẹn này?')">{% csrf_token %}
-    <button class="btn btn-outline-danger">Hủy lịch</button>
+        onsubmit="return confirm('Bạn chắc chắn muốn hủy lịch hẹn này?')" class="m-0">
+    {% csrf_token %}
+    <button class="btn btn-outline-danger px-4">
+      <i class="bi bi-x-circle me-1"></i> Hủy lịch
+    </button>
   </form>
 </div>
 {% elif appt.status == "CONFIRMED" %}
-<div class="alert alert-warning">
-  Chỉ hủy hoặc đổi trực tuyến được trước giờ khám tối thiểu {{ rules.CANCEL_MIN_HOURS }} tiếng.
-  Vui lòng gọi tổng đài phòng khám.
+<div class="alert alert-warning border-0 shadow-sm d-flex align-items-center gap-2">
+  <i class="bi bi-info-circle-fill fs-5"></i>
+  <div>
+    Chỉ hủy hoặc đổi trực tuyến được trước giờ khám tối thiểu {{ rules.CANCEL_MIN_HOURS }} tiếng.
+    Vui lòng gọi tổng đài phòng khám để được hỗ trợ.
+  </div>
 </div>
 {% endif %}
 {% endblock %}
